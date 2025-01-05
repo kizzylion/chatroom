@@ -1,5 +1,13 @@
-const homePage = (req, res) => {
+const getHomePage = (req, res) => {
   res.render("index/homepage");
 };
 
-module.exports = { homePage };
+const getLoginPage = (req, res) => {
+  res.render("index/login");
+};
+
+const getRegisterPage = (req, res) => {
+  res.render("index/register");
+};
+
+module.exports = { getHomePage, getLoginPage, getRegisterPage };

@@ -1,13 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChatRoom - Homepage</title>
-  </head>
-  <body>
-    <h1>ChatRoom - Homepage</h1>
-    <a href="/login">Login</a>
-    <a href="/register">Register</a>
+  <%- include("../partials/Head", { title: "Homepage" }) %>
+  <body class="bg-gray-900">
+    <div class="container-none w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4">
+      <div class="content w-full h-full flex flex-col justify-center items-center">
+        <div class="welcomeSection w-full h-fit flex flex-col justify-center items-center">
+          <div class="max-w-lg min-w-96 w-full welcomeSection-image mb-10 aspect-ratio-[16/9] w-full h-auto object-cover rounded-[200px] overflow-hidden mt-16 filter brightness-75">
+            <img class="w-full h-auto object-cover" loading="lazy" src="/images/welcome.jpg" alt="Welcome to ChatRoom" />
+          </div>
+          <div class="welcomeSection-text mb-6 max-w-lg w-full">
+            <h1 class=" text-purple-400 font-medium mb-2">Welcome to ChatRoom</h1>
+            <p class="text-white text-xl font-medium">
+              ChatRoom is a simple chat application that allows you to chat with
+              your friends. You have to login or register to start chatting.
+            </p>
+          </div>
+          
+        </div>
+        <div class="loginSection w-full max-w-lg h-fit flex flex-col gap-4 justify-center items-center mt-auto my-10">
+          <a href="/login" class="bg-purple-700 w-full text-white text-center px-4 py-2 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Login</a>
+          <a href="/register" class="bg-transparent w-full text-white text-center px-4 py-2 rounded-full border border-gray-700 hover:bg-gray-800 hover:text-white transition-all duration-300">Register</a>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
