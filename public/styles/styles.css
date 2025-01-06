@@ -55,7 +55,10 @@ a {
   color: inherit;
 }
 
+.error {
+  border: 1px solid red !important;
+}
+
 /* Homepage */
 .welcomeSection {
-  @apply flex flex-col items-center justify-center;
 }
