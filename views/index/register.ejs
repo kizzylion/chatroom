@@ -4,7 +4,7 @@
   <body class="bg-gray-900">
     <%- include("../partials/appHeader", { title: "Register" }) %>
     <div class="container-none max-w-screen-lg mx-auto w-full h-fit flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10 overflow-y-auto">
-      <form action="/register" method="post" class="max-w-md w-full h-fit flex flex-col items-center justify-center">
+      <form action="/register" method="post" enctype="multipart/form-data" class="max-w-md w-full h-fit flex flex-col items-center justify-center">
         
         <!-- profile picture -->
         <label for="profilePicture" class="profilePictureField w-32 h-32 mb-10 flex items-center justify-center rounded-full text-white">
@@ -14,6 +14,11 @@
             <input type="file" id="profilePicture" name="profilePicture" class="hidden" />
         </label>
         <!-- username -->
+        <% if (flash && flash.length > 0) { %>
+          <div class="w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+            <p class="text-white"><%= flash[0] %></p>
+          </div>
+        <% } %>
         <div class="usernameField w-full h-12 mb-5 flex items-center gap-2 rounded-md bg-gray-800 text-white px-4 py-2 border-2 border-gray-700 focus-within:border-purple-600">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M16.6666 19.5V17.8333C16.6666 16.9493 16.3154 16.1014 15.6903 15.4763C15.0652 14.8512 14.2173 14.5 13.3333 14.5H6.66659C5.78253 14.5 4.93468 14.8512 4.30956 15.4763C3.68444 16.1014 3.33325 16.9493 3.33325 17.8333V19.5M13.3333 7.83333C13.3333 9.67428 11.8409 11.1667 9.99992 11.1667C8.15897 11.1667 6.66659 9.67428 6.66659 7.83333C6.66659 5.99238 8.15897 4.5 9.99992 4.5C11.8409 4.5 13.3333 5.99238 13.3333 7.83333Z" stroke="#98A2B3" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/>
@@ -87,6 +92,18 @@
     const firstNameRegex = /^[a-zA-Z]{3,15}$/;
     const lastNameRegex = /^[a-zA-Z]{3,15}$/;
     const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9-]+.+.[A-Z]{2,4}/igm
+
+    window.addEventListener("beforeunload", (event) => {
+      event.preventDefault();
+    //   check if user have not submit the form
+
+        if(form.checkValidity()){
+            // check if have submit the form
+            if(usernameInput.value !== "" || firstNameInput.value !== "" || lastNameInput.value !== "" || emailInput.value !== "" || passwordInput.value !== "" || confirmPasswordInput.value !== ""){
+                event.returnValue = "Are you sure you want to leave this page? All your data will be lost.";
+            }
+        }
+    });
 
     usernameInput.addEventListener("input", () => {
         if(usernameInput.value.length < 3){

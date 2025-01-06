@@ -4,6 +4,11 @@
   <body class="bg-gray-900">
     <%- include("../partials/appHeader", { title: "Login" }) %>
     <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
+      <% if (flash && flash.length > 0) { %>
+        <div class="w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+          <p class="text-white"><%= flash[0] %></p>
+        </div>
+      <% } %>
       <form action="/login" method="post" class="max-w-md w-full h-full flex flex-col items-center justify-center">
         <div class="usernameField w-full h-12 mb-5 flex items-center gap-2 rounded-md bg-gray-800 text-white px-4 py-2 border-2 border-gray-700 focus-within:border-purple-600">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
