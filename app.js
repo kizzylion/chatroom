@@ -5,6 +5,7 @@ const pgSession = require("connect-pg-simple")(session);
 const pool = require("./db/pool");
 require("dotenv").config();
 const passport = require("passport");
+require("./strategies/LocalStrategy");
 const flash = require("connect-flash");
 const app = express();
 
@@ -26,7 +27,6 @@ app.use(express.static(path.join(__dirname, "public")));
 // use session middleware
 app.use(
   session({
-    store: new pgSession({ pool }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -36,7 +36,10 @@ app.use(
 );
 
 // use passport middleware
+app.use(passport.initialize());
 app.use(passport.session());
+
+// use flash middleware
 app.use(flash());
 
 app.use((req, res, next) => {
@@ -44,11 +47,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
+  console.log("res.locals.currentUser: ", res.locals.currentUser);
   next();
 });
 
@@ -59,17 +60,22 @@ app.use("/", indexRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  next(createError(404));
+  res.status(404).render("404", {
+    error: {
+      status: 404,
+      message: "Page not found",
+    },
+  });
 });
 
 // error handling middleware
 app.use((err, req, res, next) => {
-  //set locals, only providing err in development
+  // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get("env") == "development" ? err : {};
-
+  res.locals.error = req.app.get("env") === "development" ? err : {};
   console.error(err.stack);
-  res.status(500).send(err.message || "Something broke!");
+  res.status(err.status || 500);
+  res.render("error", { error: res.locals.error });
 });
 
 // start server

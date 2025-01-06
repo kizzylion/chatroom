@@ -1,73 +1,60 @@
 const { validationResult, body } = require("express-validator");
 const { hashPassword } = require("../helper/bcryptHash");
 const { userMethods } = require("../db/db_utilities");
-
-const validateRegister = [
-  body("username")
-    .isLength({ min: 3 })
-    .withMessage("Username must be at least 3 characters long."),
-  body("firstName")
-    .isLength({ min: 3 })
-    .withMessage("First name must be at least 3 characters long."),
-  body("lastName")
-    .isLength({ min: 3 })
-    .withMessage("Last name must be at least 3 characters long."),
-  body("email").isEmail().withMessage("Email must be a valid email address."),
-  body("profilePicture").optional(),
-  body("password")
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long."),
-  body("confirmPassword").custom((value, { req }) => {
-    if (value !== req.body.password) {
-      throw new Error("Passwords do not match.");
-    }
-    return true;
-  }),
-];
-
-const validateLogin = [
-  body("username")
-    .isLength({ min: 3 })
-    .withMessage("Username must be at least 3 characters long."),
-  body("password")
-    .isLength({ min: 8 })
-    .withMessage("Password must be at least 8 characters long."),
-];
+const passport = require("passport");
 
 const getHomePage = (req, res) => {
   res.render("index/homepage");
 };
 
 const getLoginPage = (req, res) => {
-  console.log("flash: ", req.flash());
+  const message = req.flash("message");
   res.render("index/login", {
-    flash: req.flash("message"),
+    message,
   });
 };
 
 const getRegisterPage = (req, res) => {
+  const message = req.flash("message");
   res.render("index/register", {
-    flash: req.flash("message"),
+    message,
   });
 };
 
 const postLoginPage = async (req, res, next) => {
-  const { username, password } = req.body;
   const errors = validationResult(req);
+
+  // handle validation errors
   if (!errors.isEmpty()) {
     req.flash("message", errors.array()[0].msg);
-    res.redirect("/login");
+    return res.redirect("/login");
   }
-  passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/login",
-    failureFlash: true,
+
+  // Use passport to authenticate user
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      req.flash("message", info.message || "Invalid username or password");
+      return res.redirect("/login");
+    }
+    req.login(user, (err) => {
+      if (err) {
+        return next(err);
+      }
+      return res.redirect("/");
+    });
   })(req, res, next);
 };
 
-const postLogoutPage = (req, res) => {
-  req.logout();
-  res.redirect("/login");
+const postLogoutPage = (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    res.redirect("/login");
+  });
 };
 
 const postRegisterPage = async (req, res, next) => {
@@ -98,7 +85,7 @@ const postRegisterPage = async (req, res, next) => {
     res.redirect("/login");
   } catch (err) {
     req.flash("message", "Registration failed. Please try again.");
-    res.redirect("/register");
+    next(err);
   }
 };
 

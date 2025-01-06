@@ -11,8 +11,8 @@ passport.deserializeUser(async (id, done) => {
   try {
     const user = await userMethods.getUserById(id);
     done(null, user);
-  } catch (error) {
-    done(error);
+  } catch (err) {
+    done(err);
   }
 });
 
@@ -32,8 +32,8 @@ passport.use(
           return done(null, false, { message: "Invalid password" });
         }
         return done(null, user);
-      } catch (error) {
-        return done(error);
+      } catch (err) {
+        return done(err);
       }
     }
   )
