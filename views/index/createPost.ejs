@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "Profile" }) %>
+  <body class="bg-gray-900">
+    <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+        <div class="backBtn w-6 h-6 p-[2px] flex flex-col justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="transparent" stroke="currentColor"  class="bi bi-chevron-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+          </svg>
+        </div>
+        <h1 class="text-white"> Create Post </h1>
+        <button type="submit" form="createPost-form" disabled class="submitBtn w-fit h-fit bg-purple-700 text-white px-4 py-2 rounded-md hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer">
+          Post
+        </button>   
+        
+    </header>
+    <% if (currentUser) { %>
+    <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
+        <% if (flash.error) { %>
+          <div class="w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+            <p class="text-white"><%= flash.error %></p>
+          </div>
+        <% } %>
+        <% if (flash.success) { %>
+          <div class="w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+            <p class="text-white"><%= flash.success %></p>
+          </div>
+        <% } %>
+        <div class="createPost-container max-w-[640px] w-full h-full flex flex-col items-center">
+            <div class="createPost-header w-full h-fit flex gap-4">
+                <a href="/profile" class="profilePicture w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+                    <% if (currentUser.profile_picture) { %>
+                      <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover" />
+                    <% } else { %>
+                      <div class="w-10 h-10 bg-purple-700 rounded-full flex items-center justify-center">
+                        <p class="text-white text-sm font-bold">
+                          <%= currentUser.firstname.charAt(0).toUpperCase() %>
+                          <%= currentUser.lastname.charAt(0).toUpperCase() %>
+                        </p>
+                      </div>
+                    <% } %>
+              </a>
+              <form id="createPost-form" enctype="multipart/form-data" action="/create-post" method="post" class="createPost-header w-full h-fit">
+                <textarea name="content" id="content" placeholder="What's on your mind?" rows="10" class="w-full h-full mb-4 bg-gray-800 text-white p-4 rounded-md"></textarea>
+                <div class="flex gap-2">
+                    <label id="postImageLabel" for="postImage" class="w-20 h-20 bg-gray-800 rounded-full inline-flex items-center justify-center shrink-0 text-gray-400 hover:text-white hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                        <i class="bi bi-image"></i>
+                    </label>
+                    <div class="previewImage-container relative hidden w-40 h-auto aspect-square rounded-md inline-flex items-center justify-center">
+                        <div class="previewImage-remove absolute text-white top-1 right-1 w-4 h-4 bg-gray-800 rounded-full inline-flex items-center justify-center text-white hover:bg-gray-700 transition-all duration-300 cursor-pointer z-10">
+                            <i class="bi bi-x"></i>
+                        </div>
+                        <img id="previewImage" class="previewImage relative w-40 h-auto aspect-square rounded-md inline-flex items-center justify-center">
+                    </div>
+                </div>
+                <input type="file" name="postImage" id="postImage" class="hidden">
+
+                </div>
+              </form>
+
+            </div>
+        </div>
+    </div>
+    <% } else { %>
+    <!-- redirect to login page -->
+    
+    <% } %>
+  <script>
+    const backBtn = document.querySelector(".backBtn");
+    backBtn.addEventListener("click", () => {
+        window.history.back();
+    });
+  </script>
+  <script>
+    const postImage = document.querySelector("#postImage");
+    const previewImage = document.querySelector("#previewImage");
+    const previewImageContainer = document.querySelector(".previewImage-container");
+    const previewImageRemove = document.querySelector(".previewImage-remove");
+    const postImageLabel = document.querySelector("#postImageLabel");
+    postImage.addEventListener("change", () => {
+        const file = postImage.files[0];
+        previewImage.src = URL.createObjectURL(file);
+        previewImageContainer.classList.remove("hidden");
+        postImageLabel.classList.add("hidden");
+    });
+    previewImageRemove.addEventListener("click", () => {
+        previewImage.src = "";
+        previewImageContainer.classList.add("hidden");
+        postImage.value = "";
+        postImageLabel.classList.remove("hidden");
+    });
+  </script>
+  <script>
+    const submitBtn = document.querySelector(".submitBtn");
+    const content = document.querySelector("#content");
+
+    content.addEventListener("input", () => {
+        if (content.value.length > 0) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    });
+    postImage.addEventListener("change", () => {
+        if (postImage.files.length > 0) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    });
+    
+  </script>
+</body>
+
+</html>
+

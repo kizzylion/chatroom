@@ -3,6 +3,7 @@
   <%- include("../partials/Head", { title: currentUser ? "Home" : "Homepage" }) %>
   <body class="bg-gray-900">
     <div class="container-none w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4">
+      
         <% if (!currentUser) { %>
         <div class="content w-full h-full flex flex-col justify-center items-center">
           <div class="welcomeSection w-full h-fit flex flex-col justify-center items-center">
@@ -23,12 +24,100 @@
           <a href="/register" class="bg-transparent w-full text-white text-center px-4 py-2 rounded-full border border-gray-700 hover:bg-gray-800 hover:text-white transition-all duration-300">Register</a>
           </div>
         </div>
+
+        <!-- user is logged in -->
+
         <% } else { %>
-        <div class="content w-full h-full flex flex-col justify-center items-center">
-          <h1 class="text-white text-2xl font-medium">Welcome, <%= currentUser.username %></h1>
-          <a href="/logout" method="post" class="bg-purple-700 w-full text-white text-center px-4 py-2 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Logout</a>
+          <!-- header start -->
+
+          <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+            <a href="/" class="text-white text-xl font-bold">
+              ChatRoom
+            </a>
+            <a href="/profile" class="profilePicture w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+              <% if (currentUser.profile_picture) { %>
+                <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover" />
+              <% } else { %>
+                <div class="w-10 h-10 bg-purple-700 rounded-full flex items-center justify-center">
+                  <p class="text-white text-sm font-bold">
+                    <%= currentUser.firstname.charAt(0).toUpperCase() %>
+                    <%= currentUser.lastname.charAt(0).toUpperCase() %>
+                  </p>
+                </div>
+              <% } %>
+            </a>
+          </header>
+
+          <!-- header end -->
+
+          <!-- main start -->
+          <div class="max-w-[640px] mx-auto content w-full h-full flex flex-col justify-center items-center">
+            <!-- alert start -->
+            <% if (flash.success) { %>
+            <div class="alert w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+              <p class="text-white"><%= flash.success %></p>
+            </div>
+          <% } %>
+          <% if (flash.error) { %>
+            <div class="alert w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+              <p class="text-white"><%= flash.error %></p>
+            </div>
+          <% } %>
+
+          <!-- alert end  -->
+        <div class="feeds-myrooms-tabs w-full h-fit flex flex-col justify-center items-center gap-4 pt-2">
+          <form action="" class="w-full h-fit flex justify-center items-center gap-4">
+            <input type="radio" name="feeds-myrooms-tabs" checked value="feeds" id="feeds-tab" class="hidden peer/feeds" />
+            <label for="feeds-tab" class="w-full h-fit flex justify-center items-center text-white text-xl font-medium pb-3 hover:text-purple-500 transition-all duration-300 cursor-pointer border-b-2 border-transparent peer-checked/feeds:text-purple-500 peer-checked/feeds:border-purple-500 peer-checked/feeds:font-bold">Feeds</label>
+            <input type="radio" name="feeds-myrooms-tabs" value="myrooms" id="myrooms-tab" class="hidden peer/myrooms" />
+            <label for="myrooms-tab" class="w-full h-fit flex justify-center items-center text-white text-xl font-medium pb-3 hover:text-purple-500 transition-all duration-300 cursor-pointer border-b-2 border-transparent peer-checked/myrooms:text-purple-500 peer-checked/myrooms:border-purple-500 peer-checked/myrooms:font-bold">My Rooms</label>
+          </form>
         </div>
+        <div class="feeds-myrooms-tabs-content w-full h-full flex flex-col">
+          
+
+            <h1 class="text-white text-2xl font-medium">Welcome, <%= currentUser.username %></h1>
+            <div class="post w-full h-fit flex flex-col justify-center items-center gap-4">
+              <div class="post-header w-full h-fit flex justify-center items-center gap-4">
+                <a href="/profile/<%= currentUser.username %>" class="profilePicture w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+                  <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover" />
+                </a>
+                <p class="text-white text-xl font-medium"><%= currentUser.firstname %> <%= currentUser.lastname %></p>
+                <p class="text-white text-xl font-medium"><%= currentUser.created_at %></p>
+              </div>
+              <div class="post-content w-full h-fit flex justify-center items-center gap-4">
+                <p class="text-white text-xl font-medium"><%= currentUser.content %></p>
+              </div>
+            </div>
+        </div>
+          
+        </div>
+        <!-- main end -->
+
+        <!-- navbar start -->
+        <nav class="max-w-[640px] mx-auto w-full h-fit flex justify-center items-center mt-auto py-4 border-t border-gray-700">
+          <div class="w-fit h-fit flex justify-center items-center gap-16">
+            <a href="/" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+              <i class="bi bi-house"></i>
+            </a>
+            <a href="/create-post" class="w-16 h-16 text-white text-xl font-bold bg-purple-700 rounded-full flex items-center justify-center shrink-0 hover:bg-purple-800 transition-all duration-300">
+              <i class="bi bi-plus-lg"></i>
+            </a>
+            <a href="/social-rooms" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+              <i class="bi bi-columns"></i>
+            </a>
+          </div>
+        </nav>
+        <!-- navbar end -->
         <% } %>
     </div>
+
+    <script>
+      // remove alert after 3 seconds
+      setTimeout(() => {  
+        document.querySelector(".alert").remove();
+      }, 3000);
+    </script>
   </body>
 </html>
+

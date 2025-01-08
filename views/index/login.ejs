@@ -4,9 +4,14 @@
   <body class="bg-gray-900">
     <%- include("../partials/appHeader", { title: "Login" }) %>
     <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
-      <% if (message && message.length > 0) { %>
+      <% if (flash.success) { %>
+        <div class="w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+          <p class="text-white"><%= flash.success %></p>
+        </div>
+      <% } %>
+      <% if (flash.error) { %>
         <div class="w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
-          <p class="text-white"><%= message %></p>
+          <p class="text-white"><%= flash.error %></p>
         </div>
       <% } %>
       <form action="/login" method="post" class="max-w-md w-full h-full flex flex-col items-center justify-center">

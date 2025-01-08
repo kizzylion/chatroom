@@ -57,6 +57,11 @@ const validateRegister = [
   }),
 ];
 
+const validateCreatePost = [
+  body("content").isLength({ min: 1 }).withMessage("Content is required."),
+  body("image").optional(),
+];
+
 indexRouter.get("/", indexController.getHomePage);
 indexRouter.get("/login", indexController.getLoginPage);
 indexRouter.get("/register", indexController.getRegisterPage);
@@ -71,5 +76,16 @@ indexRouter.post(
 indexRouter.post("/login", validateLogin, indexController.postLoginPage);
 
 indexRouter.get("/logout", indexController.postLogoutPage);
+
+indexRouter.get("/profile", indexController.getProfilePage);
+
+indexRouter.get("/create-post", indexController.getCreatePostPage);
+
+indexRouter.post(
+  "/create-post",
+  upload.single("postImage"),
+  validateCreatePost,
+  indexController.postCreatePostPage
+);
 
 module.exports = indexRouter;

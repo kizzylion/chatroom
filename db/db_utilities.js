@@ -47,4 +47,17 @@ const userMethods = {
   },
 };
 
-module.exports = { userMethods };
+const postMethods = {
+  insertPost: async (userId, content, post_picture) => {
+    try {
+      const query =
+        "INSERT INTO posts (user_id, content, post_picture) VALUES ($1, $2, $3)";
+      const values = [userId, content, post_picture];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+};
+
+module.exports = { userMethods, postMethods };

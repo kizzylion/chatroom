@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "Profile" }) %>
+  <body class="bg-gray-900">
+    <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+        <div class="backBtn w-6 h-6 p-[2px] flex flex-col justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="transparent" stroke="currentColor"  class="bi bi-chevron-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+          </svg>
+        </div>
+        <h1 class="text-white"> Profile </h1>
+        <a href="/logout" method="post" class="emptyDiv w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer">
+            <i class="bi bi-box-arrow-right"></i>
+        </a>
+      </header>
+    <% if (currentUser) { %>
+    <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
+        <div class="data-container max-w-[640px] w-full h-full flex flex-col items-center"> 
+            <div class="user-data w-full gap-5 h-fit flex items-center">
+                <div class="avatar-editBtn relative w-fit h-fit flex flex-col items-center justify-center ">
+                  <div class="avatar w-28 h-28 shrink-0 rounded-full items-center justify-center overflow-hidden border-4 border-gray-200">
+                        <% if (currentUser.profile_picture) { %>
+                            <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="Profile Picture" class="w-full h-full object-cover" />
+                        <% } else { %>
+                            <div class="w-28 h-28 bg-gray-700 rounded-full flex items-center justify-center">
+                                <p class="text-white text-4xl text-center font-semibold">
+                                    <%= currentUser.firstname.charAt(0).toUpperCase() %>
+                                    <%= currentUser.lastname.charAt(0).toUpperCase() %>
+                                </p>
+                            </div>
+                        <% } %>
+                  </div>
+                  <a href="/profile/edit" class="editBtn w-fit h-fit absolute -bottom-4 flex items-center justify-center text-white text-sm font-medium bg-purple-700 hover:bg-purple-800 transition-all duration-300 rounded-full px-4 py-1 cursor-pointer border border-purple-700">
+                    Edit Profile
+                  </a>
+                </div>
+              <div class="user-data w-full h-fit flex flex-col items-center">
+                  <div class="text-username w-full flex flex-col ">
+                    <h1 class="w-full text-white text-left text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize"><%= currentUser.firstname %> <%= currentUser.lastname %></h1>
+                    <p class="w-full text-gray-400 text-left text-sm">@<%= currentUser.username %></p>
+                  </div>  
+                  <p class="w-full text-gray-400 mt-2 text-left text-sm"><% if (currentUser.bio) { %><%= currentUser.bio %><% } else { %>No bio yet<% }  %></p>
+              </div>
+            </div>
+        </div>
+    </div>
+    <% } else { %>
+    <!-- redirect to login page -->
+    <script>
+      window.location.href = "/login";
+    </script>
+    <% } %>
+  </body>
+  <script>
+    const usernameField = document.querySelector(".usernameField");
+    const usernameInput = usernameField.querySelector("input");
+    const passwordField = document.querySelector(".passwordField");
+    const passwordInput = passwordField.querySelector("input");
+    const passwordEye = passwordField.querySelector("button");
+
+    usernameInput.addEventListener("input", () => {
+      if (usernameInput.value.length < 3) {
+        usernameField.classList.add("error");
+        usernameInput.setCustomValidity("Username must be at least 3 characters long.");
+        return;
+      } else {
+        usernameField.classList.remove("error");
+        usernameInput.setCustomValidity("");
+      }
+    });
+
+    passwordInput.addEventListener("input", () => {
+      if (passwordInput.value.length < 8) {
+        passwordField.classList.add("error");
+        passwordInput.setCustomValidity("Password must be at least 8 characters long.");
+        return;
+      } else {
+        passwordField.classList.remove("error");
+        passwordInput.setCustomValidity("");
+      }
+    });
+
+    passwordEye.addEventListener("click", () => {
+      passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if(form.checkValidity()){
+        form.submit();
+      }
+    });
+  </script>
+  <script>
+    const backBtn = document.querySelector(".backBtn");
+    backBtn.addEventListener("click", () => {
+        window.history.back();
+    });
+  </script>
+</html>
+
