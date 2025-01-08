@@ -3,8 +3,9 @@ const { hashPassword } = require("../helper/bcryptHash");
 const { userMethods, postMethods } = require("../db/db_utilities");
 const passport = require("passport");
 
-const getHomePage = (req, res) => {
-  res.render("index/homepage");
+const getHomePage = async (req, res) => {
+  const posts = await postMethods.getPosts();
+  res.render("index/homepage", { posts });
 };
 
 const getLoginPage = (req, res) => {
