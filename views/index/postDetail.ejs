@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "Post Detail" }) %>
+  <body class="bg-gray-900">
+    <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+        <div class="backBtn w-6 h-6 p-[2px] flex flex-col justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="transparent" stroke="currentColor"  class="bi bi-chevron-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+          </svg>
+        </div>
+        <h1 class="text-white"> Post Detail </h1>
+        <div class="emptyDiv w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer">
+
+        </div>
+    </header>
+    <% if (currentUser) { %>
+    <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 pt-10 pb-0 overflow-y-auto">
+        <div class="data-container max-w-[640px] w-full h-fit flex flex-col items-center"> 
+            <div id="post-<%- post.id %>" class="post w-full h-fit flex flex-col justify-center items-center pt-3 border-b border-gray-800">
+                <div class="post-header w-full h-fit flex justify-center items-center gap-4 mb-2 px-4">
+                  
+                  <a href="/profile/<%= post.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                    <% if(post.profile_picture){ %>
+                      <img src="data:image/png;base64,<%= post.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                      <% }else{ %>
+                        <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                          <p class="w-full h-fit text-white text-center text-base font-medium"><%= post.firstname.charAt(0) %><%= post.lastname.charAt(0) %></p>
+                        </div>
+                      <% } %>
+                  </a>
+                  <div class="post-header-text w-full h-fit flex flex-col justify-center items-center gap-0">
+                    <p class="w-full h-fit text-white text-xl text-left  font-medium capitalize"><%= post.firstname %> <%= post.lastname %></p>
+                    <p class="w-full h-fit text-white text-sm text-left text-gray-400 font-medium" ><%= post.time_ago %></p> <!-- TODO: change to time ago in js -->
+                  </div>
+                </div>
+                <div class="post-content w-full h-fit flex flex-col justify-center items-center gap-3">
+                  <p class="w-full h-fit text-white text-base font-regular px-4"><%= post.content %></p>
+                  <% if (post.post_picture) { %>
+                    <div class="post-image w-full h-fit flex justify-center items-center aspect-ratio-[16/9] overflow-hidden rounded-none">
+                      <img loading="lazy" src="data:image/png;base64,<%= post.post_picture %>" alt="post image" class="w-full h-auto object-cover" />
+                    </div>
+                  <% } %>
+
+                </div>
+                <div class="post-actions w-full h-fit flex justify-between items-center gap-12 p-4">
+                  
+                  <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
+                  </a>
+                  <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">
+                        <%= Object.keys(tree).length %>
+                    </span>
+                  </a> 
+                  <!-- reply -->
+                  <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-share"></i>
+                  </a>
+                  <!-- delete -->
+                   <div>
+                     <% if (currentUser.username === post.username) { %>
+                       <a href="/post/<%= post.id %>" onclick="return confirm('Are you sure you want to delete this post?')" method="post" class="text-gray-400 text-xl font-medium">
+                         <i class="bi bi-trash"></i>
+                       </a>
+                     <% } %>
+                   </div>
+                </div>
+            </div>
+             <!-- comment -->
+            <div class="post-comments w-full h-fit flex flex-col justify-center items-center gap-0">
+                <div class="section-header w-full h-fit flex justify-center items-center gap-2 p-4 border-b border-gray-800">
+                    <h2 class="w-full h-fit text-white text-sm font-medium">Comments (<%= Object.keys(tree).length %>)</h2>
+                </div>
+                <div class="section-content w-full h-fit flex flex-col justify-center items-center gap-2">
+                    <% if (Object.keys(tree).length > 0) { %> 
+                        <% Object.values(tree).forEach((comment) => { %>
+                            <div class="section-content w-full h-full flex flex-col justify-center items-center gap-3 pt-2 pb-0 border-b border-gray-800">
+                                <div class="comment-container w-full h-fit flex flex-col items-center gap-2 pt-2">
+                                    <div class="comment-details w-full h-fit flex justify-start items-start gap-2">
+                                        <a href="/profile/<%= comment.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                                            <% if (comment.profile_picture) { %>
+                                                <img src="data:image/png;base64,<%= comment.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                                            <% } else { %>
+                                                <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                                                    <p class="w-full h-fit text-white text-center text-base font-medium"><%= comment.firstname.charAt(0) %><%= comment.lastname.charAt(0) %></p>
+                                                </div>
+                                            <% } %>
+                                        </a>
+                                        <div class="comment-details w-full h-fit flex flex-col justify-center items-center gap-1">
+                                            <div class="comment-header-text w-full h-fit flex justify-left items-center py-1 gap-2">
+                                                <p class="w-fit h-fit text-gray-50 text-base  font-medium capitalize"><%= comment.firstname %> <%= comment.lastname %></p>
+                                                <p class="w-fit h-fit text-gray-400 text-xs font-regular"><%= comment.time_ago %></p>
+                                            </div>
+                                            <p class="w-full h-fit text-gray-50 text-base font-regular"><%= comment.content %></p>
+                                            <div class="comment-actions w-full h-fit flex justify-start items-center gap-2 pb-2">
+                                                <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
+                                                </a>
+                                                <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                                    <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">
+                                                        <%= Object.keys(comment.replies).length %>
+                                                    </span>
+                                                </a>
+                                                <!-- delete -->
+                                                <div>
+                                                  <% if (currentUser.username === comment.username) { %>
+                                                    <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>/delete" onclick="return confirm('Are you sure you want to delete this comment?')" method="post" class="text-gray-400 text-xl font-medium">
+                                                      <i class="bi bi-trash"></i>
+                                                    </a>
+                                                  <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                    <div class="section-content w-full h-full flex flex-col justify-center items-center gap-3 mt-3">
+                        <p class="w-full h-fit text-gray-400 text-sm font-medium">No comments yet</p>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <form action="/post/<%= post.id %>" method="post" class="comment-input max-w-[640px] w-full h-fit sticky bottom-0 bg-gray-900 border-t border-gray-700 flex justify-center items-center gap-2 py-4 mt-8">
+            <input type="hidden" name="postId" value="<%= post.id %>" />
+            <input type="hidden" name="parentCommentId" value="null" />
+            <textarea id="comment-input" name="content" rows="1" class="w-full h-fit text-white text-sm font-medium bg-gray-800 border border-gray-700 ring-gray-800 rounded-md p-2 resize-none focus:outline-none focus:ring-0 focus:border-purple-800" placeholder="Add a comment"></textarea>
+            <button id="comment-submit" type="submit" disabled class="w-fit h-fit text-white text-sm font-medium bg-purple-800 rounded-md px-4 py-2 disabled:bg-purple-800/50 disabled:text-gray-400 disabled:cursor-not-allowed">Reply</button>
+        </form>
+    </div>
+    <% } else { %>
+    <!-- redirect to login page -->
+    <script>
+      window.location.href = "/login";
+    </script>
+    <% } %>
+     <!-- navbar start -->
+     <nav class="max-w-[640px] mx-auto w-full h-fit sticky bottom-0 bg-gray-900 flex justify-center items-center mt-auto py-4 border-t border-gray-700">
+      <div class="w-fit h-fit flex justify-center items-center gap-16">
+        <a href="/" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+          <i class="bi bi-house"></i>
+        </a>
+        <a href="/create-post" class="w-16 h-16 text-white text-xl font-bold bg-purple-700 rounded-full flex items-center justify-center shrink-0 hover:bg-purple-800 transition-all duration-300">
+          <i class="bi bi-plus-lg"></i>
+        </a>
+        <a href="/social-rooms" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+          <i class="bi bi-columns"></i>
+        </a>
+      </div>
+    </nav>
+  </body>
+  <script>
+    const backBtn = document.querySelector(".backBtn");
+    const commentInput = document.getElementById("comment-input");
+    const commentSubmit = document.getElementById("comment-submit");    
+    backBtn.addEventListener("click", () => {
+        window.history.back();
+
+        document.getElementById(`post-<%- post.id %>`).scrollIntoView({ behavior: 'smooth' });
+        // go home and focus on the selected post
+        // window.location.href = "/";
+        // document.getElementById(`post-<%- post.id %>`).scrollIntoView({ behavior: 'smooth' });
+    });
+    commentInput.addEventListener("input", () => {
+        if (commentInput.value.length > 0) {
+            commentSubmit.disabled = false;
+        } else {
+            commentSubmit.disabled = true;
+        }
+    });
+  </script>
+</html>
+

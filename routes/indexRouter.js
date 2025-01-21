@@ -57,6 +57,10 @@ const validateRegister = [
   }),
 ];
 
+const validateComment = [
+  body("content").isLength({ min: 1 }).withMessage("Content is required."),
+];
+
 const validateCreatePost = [
   body("content").isLength({ min: 1 }).withMessage("Content is required."),
   body("image").optional(),
@@ -77,15 +81,22 @@ indexRouter.post("/login", validateLogin, indexController.postLoginPage);
 
 indexRouter.get("/logout", indexController.postLogoutPage);
 
-indexRouter.get("/profile", indexController.getProfilePage);
+indexRouter.get("/profile/:username", indexController.getProfilePage);
 
 indexRouter.get("/create-post", indexController.getCreatePostPage);
 
+indexRouter.get("/post/:id", indexController.getPostDetailPage);
 indexRouter.post(
   "/create-post",
   upload.single("postImage"),
   validateCreatePost,
   indexController.postCreatePostPage
 );
+
+indexRouter.post("/post/:id", validateComment, indexController.postComment);
+
+indexRouter.get("/post/:postId/reply/:commentId", indexController.getReplyPage);
+
+indexRouter.post("/post/:postId/reply/:commentId", indexController.postReply);
 
 module.exports = indexRouter;

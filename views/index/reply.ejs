@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "Reply" }) %>
+  <body class="bg-gray-900">
+    <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+        <div class="backBtn w-6 h-6 p-[2px] flex flex-col justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="transparent" stroke="currentColor"  class="bi bi-chevron-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+          </svg>
+        </div>
+        <h1 class="text-white"> Post Detail </h1>
+        <div class="emptyDiv w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer">
+
+        </div>
+      </header>
+    <% if (currentUser) { %>
+    <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 pt-10 pb-0 overflow-y-auto">
+        <div class="max-w-[640px] mx-auto content w-full h-fit flex flex-col justify-center items-center">
+          <!-- alert start -->
+          <% if (flash.success) { %>
+          <div class="alert w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+            <p class="text-white"><%= flash.success %></p>
+          </div>
+          <% } %>
+          <% if (flash.error) { %>
+          <div class="alert w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+            <p class="text-white"><%= flash.error %></p>
+          </div>
+          <% } %>
+        </div>
+        <!-- alert end -->
+        <div class="data-container max-w-[640px] w-full h-fit flex flex-col items-center"> 
+            <div id="post-<%- post.id %>" class="post w-full h-fit flex flex-col justify-center items-center pt-3 border-b border-gray-800">
+                <div class="post-header w-full h-fit flex justify-center items-center gap-4 mb-2 px-4">
+                  <a href="/profile/<%= post.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                    <img src="data:image/png;base64,<%= post.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                  </a>
+                  <div class="post-header-text w-full h-fit flex flex-col justify-center items-center gap-0">
+                    <p class="w-full h-fit text-white text-xl text-left  font-medium capitalize"><%= post.firstname %> <%= post.lastname %></p>
+                    <p class="w-full h-fit text-white text-sm text-left text-gray-400 font-medium" ><%= post.time_ago %></p> <!-- TODO: change to time ago in js -->
+                  </div>
+                </div>
+                <div class="post-content w-full h-fit flex flex-col justify-center items-center gap-3">
+                  <p class="w-full h-fit text-white text-base font-regular px-4"><%= post.content %></p>
+                  <% if (post.post_picture) { %>
+                    <div class="post-image w-full h-fit flex justify-center items-center aspect-ratio-[16/9] overflow-hidden rounded-none">
+                      <img loading="lazy" src="data:image/png;base64,<%= post.post_picture %>" alt="post image" class="w-full h-auto object-cover" />
+                    </div>
+                  <% } %>
+                </div>
+                <div class="post-actions w-full h-fit flex justify-between items-center gap-12 p-4">
+                  
+                  <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
+                  </a>
+                  <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">
+                        <%= Object.keys(tree).length %>
+                    </span>
+                  </a>
+                  <!-- reply -->
+                  <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-share"></i>
+                  </a>
+                  <!-- delete -->
+                   <div>
+                     <% if (currentUser.username === post.username) { %>
+                       <a href="/post/<%= post.id %>/delete" onclick="return confirm('Are you sure you want to delete this post?')" method="post" class="text-gray-400 text-xl font-medium">
+                         <i class="bi bi-trash"></i>
+                       </a>
+                     <% } %>
+                   </div>
+                </div>
+            </div>
+             <!-- ancestor comment should be here, show ancestor tree-->
+              <!-- put the ancestor comment inside the parent comment start from the high ancestor-->
+              <% if (ancestorComments.length > 0) { %>
+                <div class="comment-container w-full h-fit flex flex-col items-center gap-2 pt-2 pl-2">
+                  <div class="comment-details w-full h-fit flex justify-start items-start gap-2 border-l-2 border-gray-800 pl-4 py-2">
+                    <a href="/profile/<%= ancestorComments[0].username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                      <% if (ancestorComments[0].profile_picture) { %>
+                          <img src="data:image/png;base64,<%= ancestorComments[0].profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                      <% } else { %>
+                          <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                              <p class="w-full h-fit text-white text-center text-base font-medium"><%= ancestorComments[0].firstname.charAt(0) %><%= ancestorComments[0].lastname.charAt(0) %></p>
+                          </div>
+                      <% } %>
+                    </a>
+                    <div class="ancestor-comment-container w-full h-fit flex flex-col justify-center items-center gap-2">
+                      <div class="ancestor-comment-header-text w-full h-fit flex justify-left items-center py-1 gap-2">
+                        <p class="w-fit h-fit text-gray-50 text-base  font-medium capitalize"><%= ancestorComments[0].firstname %> <%= ancestorComments[0].lastname %></p>
+                        <p class="w-fit h-fit text-gray-400 text-xs font-regular"><%= ancestorComments[0].time_ago %></p>
+                      </div>
+                      <p class="ancestor-comment-content w-full h-fit text-gray-50 text-base font-regular"><%= ancestorComments[0].content %></p>
+                      <div class="ancestor-comment-actions w-full h-fit flex justify-start items-center gap-2 pb-2">
+                        <a href="/post/<%= post.id %>/reply/<%= ancestorComments[0].comment_id %>" class="text-gray-400 text-xl font-medium">
+                            <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">-</span>
+                        </a>
+                        <a href="/post/<%= post.id %>/reply/<%= ancestorComments[0].comment_id %>" class="text-gray-400 text-xl font-medium">
+                            <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium"> <%= Object.keys(ancestorComments[0].replies).length %></span>
+                        </a>
+                        <!-- delete -->
+                        <div>
+                          <% if (currentUser.username === ancestorComments[0].username) { %>
+                            <a href="/post/<%= post.id %>/reply/<%= ancestorComments[0].comment_id %>/delete" onclick="return confirm('Are you sure you want to delete this comment?')" method="post" class="text-gray-400 text-xl font-medium">
+                              <i class="bi bi-trash"></i>
+                            </a>
+                          <% } %>
+                        </div>
+                      </div>
+                      <!-- comment -->
+                      <div class="comment-details w-full h-fit flex justify-start items-start gap-2 border-l-2 border-gray-800 pl-4 py-2">
+                        <a href="/profile/<%= comment.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                          <% if (comment.profile_picture) { %>
+                              <img src="data:image/png;base64,<%=comment.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                          <% } else { %>
+                              <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                                  <p class="w-full h-fit text-white text-center text-base font-medium"><%= comment.firstname.charAt(0) %><%= comment.lastname.charAt(0) %></p>
+                              </div>
+                          <% } %>
+                        </a>
+                        <div class="comment-container w-full h-fit flex flex-col justify-center items-center gap-2">
+                          <div class="comment-header-text w-full h-fit flex justify-left items-center py-1 gap-2">
+                            <p class="w-fit h-fit text-gray-50 text-base  font-medium capitalize"><%= comment.firstname %> <%= comment.lastname %></p>
+                            <p class="w-fit h-fit text-gray-400 text-xs font-regular"><%= comment.time_ago %></p>
+                          </div>
+                          <p class="w-full h-fit text-gray-50 text-base font-regular"><%= comment.content %></p>
+                          <div class="comment-actions w-full h-fit flex justify-start items-center gap-2 pb-2">
+                            <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
+                              <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">-</span>
+                            </a>
+                            <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
+                              <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium"><%= replies.length %></span>
+                            </a>
+                            <!-- delete -->
+                            <div>
+                              <% if (currentUser.username === comment.username) { %>
+                                <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>/delete" onclick="return confirm('Are you sure you want to delete this comment?')" method="post" class="text-gray-400 text-xl font-medium">
+                                  <i class="bi bi-trash text-red-500"></i>
+                                </a>
+                              <% } %>
+                            </div>
+                          </div>
+                          <!-- comment header -->
+                          <div class="comment-header w-full h-fit flex justify-center items-center gap-2 p-1 border-y border-gray-800">
+                            <p class="w-full h-fit text-gray-50 text-base font-medium">Comments (<%= replies.length %>)</p>
+                          </div>
+                          <!-- reply -->
+                          <div class="comment-replies w-full h-fit flex flex-col justify-center items-center gap-2">
+                            <% replies.forEach((reply) => { %>
+                              <div class="reply-container w-full h-fit flex flex-col items-center gap-2 pt-2 pl-2">
+                                <div class="reply-details w-full h-fit flex justify-start items-start gap-2 border-l-2 border-gray-800 pl-3 py-2">
+                                  <a href="/profile/<%= reply.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                                    <% if (reply.profile_picture) { %>
+                                        <img src="data:image/png;base64,<%= reply.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                                    <% } else { %>
+                                        <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                                          <p class="w-full h-fit text-white text-center text-base font-medium"><%= reply.firstname.charAt(0) %><%= reply.lastname.charAt(0) %></p>
+                                        </div>
+                                    <% } %>
+                                  </a>
+                                  <div class="reply-details w-full h-fit flex flex-col justify-center items-center gap-1">
+                                    <div class="reply-header-text w-full h-fit flex justify-left items-center py-1 gap-2">
+                                        <p class="w-fit h-fit text-gray-50 text-base  font-medium capitalize"><%= reply.firstname %> <%= reply.lastname %></p>
+                                        <p class="w-fit h-fit text-gray-400 text-xs font-regular"><%= reply.time_ago %></p>
+                                    </div>
+                                    <p class="w-full h-fit text-gray-50 text-base font-regular"><%= reply.content %></p>
+                                    <div class="reply-actions w-full h-fit flex justify-start items-center gap-2 pb-2">
+                                      <a href="/post/<%= post.id %>/reply/<%= reply.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                        <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">-</span>
+                                      </a>
+                                      <a href="/post/<%= post.id %>/reply/<%= reply.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                        <i class="bi bi-chat-dots mr-1"></i> 
+                                        <span class="text-gray-400 text-sm font-medium">
+                                          <%= Object.keys(reply.replies).length %>
+                                        </span>
+                                      </a>
+                                      <!-- delete -->
+                                      <div>
+                                        <% if (currentUser.username === reply.username) { %>
+                                          <a href="/post/<%= post.id %>/reply/<%= reply.comment_id %>/delete" onclick="return confirm('Are you sure you want to delete this comment?')" method="post" class="text-gray-400 text-xl font-medium">
+                                            <i class="bi bi-trash"></i>
+                                          </a>
+                                        <% } %>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            <% }) %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <% } else { %>
+                <!-- comment -->
+                    <div class="comment-container w-full h-fit flex flex-col items-center gap-2 pt-2 pl-2 bg-indigo-900/5">
+                      <div class="comment-details w-full h-fit flex justify-start items-start gap-2 border-l-2 border-gray-800 pl-3 py-2">
+                        <a href="/profile/<%= comment.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                            <% if (comment.profile_picture) { %>
+                                <img src="data:image/png;base64,<%= comment.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                            <% } else { %>
+                                <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                                    <p class="w-full h-fit text-white text-center text-base font-medium"><%= comment.firstname.charAt(0) %><%= comment.lastname.charAt(0) %></p>
+                                </div>
+                            <% } %>
+                        </a>
+                        <div class="comment-details w-full h-fit flex flex-col justify-center items-center gap-1">
+                            <div class="comment-header-text w-full h-fit flex justify-left items-center py-1 gap-2">
+                                <p class="w-fit h-fit text-gray-50 text-base  font-medium capitalize"><%= comment.firstname %> <%= comment.lastname %></p>
+                                <p class="w-fit h-fit text-gray-400 text-xs font-regular"><%= comment.time_ago %></p>
+                            </div>
+                            <p class="w-full h-fit text-gray-50 text-base font-regular"><%= comment.content %></p>
+                            <div class="comment-actions w-full h-fit flex justify-start items-center gap-2 pb-2">
+                                <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">-</span>
+                                </a>
+                                <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                    <i class="bi bi-chat-dots mr-1"></i> 
+                                    <span class="text-gray-400 text-sm font-medium">
+                                      <%= Object.keys(replies).length %>
+                                    </span>
+                                </a>
+                                <!-- delete -->
+                                <div>
+                                  <% if (currentUser.username === comment.username) { %>
+                                    <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>/delete" onclick="return confirm('Are you sure you want to delete this comment?')" method="post" class="text-gray-400 text-xl font-medium">
+                                      <i class="bi bi-trash"></i>
+                                    </a>
+                                  <% } %>
+                                </div>
+                            </div>
+                            <!-- reply header -->
+                            <div class="reply-header w-full h-fit flex justify-center items-center gap-2 p-1 border-y border-gray-800">
+                                <p class="w-full h-fit text-gray-50 text-base font-medium">Comments (<%= Object.keys(replies).length %>)</p>
+                            </div>
+                            <!-- replies -->
+                            <div class="replies w-full h-fit flex flex-col justify-center items-center gap-2 border-b border-gray-800">
+                                <% replies.forEach((reply) => { %>
+                                    <div class="reply-container w-full h-fit flex flex-col justify-center items-center gap-2 pt-2 pl-2">
+                                        <div class="reply-details w-full h-fit flex justify-start items-start gap-2 border-l-2 border-gray-800 pl-3 py-2">
+                                            <% if (reply.profile_picture) { %>
+                                            <a href="/profile/<%= reply.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                                                <img src="data:image/png;base64,<%= reply.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                                            </a>
+                                            <% } else { %>
+                                            <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                                                <p class="w-full h-fit text-white text-center text-base font-medium"><%= reply.firstname.charAt(0) %><%= reply.lastname.charAt(0) %></p>
+                                            </div>
+                                            <% } %>
+                                            <div class="reply-details w-full h-fit flex flex-col justify-center items-center gap-1">
+                                                <div class="reply-header-text w-full h-fit flex justify-left items-center py-1 gap-2">
+                                                    <p class="w-fit h-fit text-gray-50 text-base  font-medium capitalize"><%= reply.firstname %> <%= reply.lastname %></p>
+                                                    <p class="w-fit h-fit text-gray-400 text-xs font-regular"><%= reply.time_ago %></p>
+                                                </div>
+                                                <p class="w-full h-fit text-gray-50 text-base font-regular"><%= reply.content %></p>
+                                                <div class="reply-actions w-full h-fit flex justify-start items-center gap-2 pb-2">
+                                                    <a href="/post/<%= post.id %>/reply/<%= reply.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                                        <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">-</span>
+                                                    </a>
+                                                    <a href="/post/<%= post.id %>/reply/<%= reply.comment_id %>" class="text-gray-400 text-xl font-medium">
+                                                        <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium"> <%= Object.keys(reply.replies).length %></span>
+                                                    </a>
+                                                    <!-- delete -->
+                                                    <div>
+                                                      <% if (currentUser.username === reply.username) { %>
+                                                        <a href="/post/<%= post.id %>/reply/<%= reply.comment_id %>/delete" onclick="return confirm('Are you sure you want to delete this comment?')" method="post" class="text-gray-400 text-xl font-medium">
+                                                          <i class="bi bi-trash"></i>
+                                                        </a>
+                                                      <% } %>
+                                                    </div>
+                                                  </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+
+                <% } %>
+        </div>
+        <form action="/post/<%= post.id %>/reply/<%= comment.comment_id %>" method="post" class="comment-input max-w-[640px] w-full h-fit sticky bottom-0 bg-gray-900 border-t border-gray-700 flex justify-center items-center gap-2 py-4 mt-8">
+          <input type="hidden" name="postId" value="<%= post.id %>" />
+          <input type="hidden" name="parentCommentId" value="<%= comment.comment_id %>" />
+          <textarea id="comment-input" name="content" rows="1" class="w-full h-fit text-white text-sm font-medium bg-gray-800 border border-gray-700 ring-gray-800 rounded-md p-2 resize-none focus:outline-none focus:ring-0 focus:border-purple-800" placeholder="Add a comment"></textarea>
+          <button id="comment-submit" type="submit" disabled class="w-fit h-fit text-white text-sm font-medium bg-purple-800 rounded-md px-4 py-2 disabled:bg-purple-800/50 disabled:text-gray-400 disabled:cursor-not-allowed">Reply</button>
+      </form>
+    </div>
+    <% } else { %>
+    <!-- redirect to login page -->
+    <script>
+      window.location.href = "/login";
+    </script>
+    <% } %>
+     <!-- navbar start -->
+     <nav class="max-w-[640px] mx-auto w-full h-fit sticky bottom-0 bg-gray-900 flex justify-center items-center mt-auto py-4 border-t border-gray-700">
+      <div class="w-fit h-fit flex justify-center items-center gap-16">
+        <a href="/" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+          <i class="bi bi-house"></i>
+        </a>
+        <a href="/create-post" class="w-16 h-16 text-white text-xl font-bold bg-purple-700 rounded-full flex items-center justify-center shrink-0 hover:bg-purple-800 transition-all duration-300">
+          <i class="bi bi-plus-lg"></i>
+        </a>
+        <a href="/social-rooms" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+          <i class="bi bi-columns"></i>
+        </a>
+      </div>
+    </nav>
+  </body>
+  <script>
+    const backBtn = document.querySelector(".backBtn");
+    const commentInput = document.getElementById("comment-input");
+    const commentSubmit = document.getElementById("comment-submit");    
+    backBtn.addEventListener("click", () => {
+        window.history.back();
+    });
+    commentInput.addEventListener("input", () => {
+        if (commentInput.value.length > 0) {
+            commentSubmit.disabled = false;
+        } else {
+            commentSubmit.disabled = true;
+        }
+    });
+  </script>
+</html>
+

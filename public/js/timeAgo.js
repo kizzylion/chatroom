@@ -1,5 +1,7 @@
-import { formatDistanceToNow } from "date-fns";
+const { formatDistanceToNow } = require("date-fns");
 
-export const timeAgo = (date) => {
+const timeAgo = (date) => {
   return formatDistanceToNow(date, { addSuffix: true });
 };
+
+module.exports = timeAgo;

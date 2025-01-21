@@ -34,7 +34,7 @@
             <a href="/" class="text-white text-xl font-bold">
               ChatRoom
             </a>
-            <a href="/profile" class="profilePicture w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+            <a href="/profile/<%= currentUser.username %>" class="profilePicture w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
               <% if (currentUser.profile_picture) { %>
                 <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover" />
               <% } else { %>
@@ -66,26 +66,33 @@
 
           <!-- alert end  -->
         <div class="feeds-myrooms-tabs w-full h-fit flex flex-col justify-center items-center gap-4 pt-2 mb-2">
-          <form action="" class="w-full h-fit flex justify-center items-center gap-4">
-            <input type="radio" name="feeds-myrooms-tabs" checked value="feeds" id="feeds-tab" class="hidden peer/feeds" />
-            <label for="feeds-tab" class="w-full h-fit flex justify-center items-center text-gray-400 text-xl font-medium pb-3 hover:text-purple-500 transition-all duration-300 cursor-pointer border-b-2 border-transparent peer-checked/feeds:text-purple-500 peer-checked/feeds:border-purple-500 peer-checked/feeds:font-bold">Feeds</label>
-            <input type="radio" name="feeds-myrooms-tabs" value="myrooms" id="myrooms-tab" class="hidden peer/myrooms" />
-            <label for="myrooms-tab" class="w-full h-fit flex justify-center items-center text-gray-400 text-xl font-medium pb-3 hover:text-purple-500 transition-all duration-300 cursor-pointer border-b-2 border-transparent peer-checked/myrooms:text-purple-500 peer-checked/myrooms:border-purple-500 peer-checked/myrooms:font-bold">My Rooms</label>
+          <form id="selection-tabs" method="get" action="" class="w-full h-fit flex justify-center items-center gap-4">
+            <input type="radio" name="selection-tabs" <%= selectedTab === "feeds"||selectedTab === undefined ? "checked" : "" %> value="feeds" id="feeds-tab" class="hidden peer/feeds" />
+            <label for="feeds-tab" class="w-full h-fit flex justify-center items-center text-gray-400 text-xl font-medium pb-3 hover:text-purple-500 transition-all duration-300 cursor-pointer border-b-2 border-transparent peer-checked/feeds:text-purple-500 peer-checked/feeds:border-purple-500 peer-checked/feeds:font-bold"><a href="/?selectedTab=feeds">Feeds</a></label>
+            <input type="radio" name="selection-tabs" <%= selectedTab === "myrooms" ? "checked" : "" %> value="myrooms" id="myrooms-tab" class="hidden peer/myrooms" />
+            <label for="myrooms-tab" class="w-full h-fit flex justify-center items-center text-gray-400 text-xl font-medium pb-3 hover:text-purple-500 transition-all duration-300 cursor-pointer border-b-2 border-transparent peer-checked/myrooms:text-purple-500 peer-checked/myrooms:border-purple-500 peer-checked/myrooms:font-bold"><a href="/?selectedTab=myrooms">My Rooms</a></label>
           </form>
         </div>
-        <div class="feeds-myrooms-tabs-content relative w-full h-full flex flex-col overflow-y-auto pb-[50vh]">
-          <div class="refresh-posts hidden sticky top-2 right-4 mx-auto w-fit h-fit flex justify-center items-center gap-4">
+        <% if (selectedTab === "feeds"||selectedTab === undefined) { %>
+        <div id="feeds-container" class="feeds-myrooms-tabs-content relative w-full h-full flex flex-col overflow-y-auto pb-[50vh]">
+          <div class="refresh-posts hidden sticky  top-2 right-4 mx-auto w-fit h-fit flex justify-center items-center gap-4">
             <button onclick="window.location.reload()" class="bg-purple-700 text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Refresh</button>
           </div>  
           <% posts.forEach(post => { %>
-            <div class="post w-full h-fit flex flex-col justify-center items-center pt-3 border-b border-gray-800">
+            <div id="post-<%= post.id %>" class="post w-full h-fit flex flex-col justify-center items-center pt-3 border-b border-gray-800">
               <div class="post-header w-full h-fit flex justify-center items-center gap-4 mb-2 px-4">
                 <a href="/profile/<%= post.username %>" class="profilePicture w-10 h-10 shrink-0  rounded-full flex items-center justify-center overflow-hidden">
+                  <% if(post.profile_picture){%>
                   <img src="data:image/png;base64,<%= post.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover " />
+                  <% }else{ %>
+                    <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                      <p class="w-full h-fit text-white text-center text-base font-medium"><%= post.firstname.charAt(0) %><%= post.lastname.charAt(0) %></p>
+                    </div>
+                  <% } %>
                 </a>
                 <div class="post-header-text w-full h-fit flex flex-col justify-center items-center gap-0">
                   <p class="w-full h-fit text-white text-xl text-left  font-medium"><%= post.firstname %> <%= post.lastname %></p>
-                  <p class="w-full h-fit text-white text-sm text-left text-gray-400 font-medium" ><%= post.created_at %></p> <!-- TODO: change to time ago in js -->
+                  <p class="w-full h-fit text-white text-sm text-left text-gray-400 font-medium" ><%= post.time_ago %></p> <!-- TODO: change to time ago in js -->
                 </div>
               </div>
               <div class="post-content w-full h-fit flex flex-col justify-center items-center gap-3">
@@ -102,20 +109,33 @@
                   <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
                 </a>
                 <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
-                  <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
+                  <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">
+                      <%= post.comment_count %>
+                  </span>
                 </a>
                 <!-- reply -->
                 <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
                   <i class="bi bi-share"></i>
                 </a>
-                <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
-                  <i class="bi bi-trash"></i>
-                </a>
+                <!-- delete -->
+                 <div>
+                   <% if (currentUser.username === post.username) { %>
+                     <a href="/post/<%= post.id %>" onclick="return confirm('Are you sure you want to delete this post?')" method="post" class="text-gray-400 text-xl font-medium">
+                       <i class="bi bi-trash"></i>
+                     </a>
+                   <% } %>
+                 </div>
               </div>
               </div>
           <% }) %>
         </div>
+        <% } %>
+        <% if (selectedTab === "myrooms") { %>
+        <div id="myrooms-container" class="feeds-myrooms-tabs-content relative w-full h-full flex flex-col overflow-y-auto pb-[50vh]">
+          <p>My Rooms</p>
           
+        </div>
+        <% } %>
         </div>
         <!-- main end -->
 
@@ -160,6 +180,7 @@
         }
       }); 
     </script>
+    
   </body>
 </html>
 

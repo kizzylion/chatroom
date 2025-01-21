@@ -16,33 +16,52 @@
     <% if (currentUser) { %>
     <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
         <div class="data-container max-w-[640px] w-full h-full flex flex-col items-center"> 
+          <% if (user) { %>
             <div class="user-data w-full gap-5 h-fit flex items-center">
                 <div class="avatar-editBtn relative w-fit h-fit flex flex-col items-center justify-center ">
                   <div class="avatar w-28 h-28 shrink-0 rounded-full items-center justify-center overflow-hidden border-4 border-gray-200">
-                        <% if (currentUser.profile_picture) { %>
-                            <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="Profile Picture" class="w-full h-full object-cover" />
+                        <% if (user.profile_picture) { %>
+                            <img src="data:image/png;base64,<%= user.profile_picture %>" alt="Profile Picture" class="w-full h-full object-cover" />
                         <% } else { %>
                             <div class="w-28 h-28 bg-gray-700 rounded-full flex items-center justify-center">
                                 <p class="text-white text-4xl text-center font-semibold">
-                                    <%= currentUser.firstname.charAt(0).toUpperCase() %>
-                                    <%= currentUser.lastname.charAt(0).toUpperCase() %>
+                                    <%= user.firstname.charAt(0).toUpperCase() %>
+                                    <%= user.lastname.charAt(0).toUpperCase() %>
                                 </p>
                             </div>
                         <% } %>
                   </div>
+                  <% if (currentUser.username === user.username) { %>
                   <a href="/profile/edit" class="editBtn w-fit h-fit absolute -bottom-4 flex items-center justify-center text-white text-sm font-medium bg-purple-700 hover:bg-purple-800 transition-all duration-300 rounded-full px-4 py-1 cursor-pointer border border-purple-700">
                     Edit Profile
                   </a>
+                  <% } %>
                 </div>
               <div class="user-data w-full h-fit flex flex-col items-center">
                   <div class="text-username w-full flex flex-col ">
-                    <h1 class="w-full text-white text-left text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize"><%= currentUser.firstname %> <%= currentUser.lastname %></h1>
-                    <p class="w-full text-gray-400 text-left text-sm">@<%= currentUser.username %></p>
+                    <h1 class="w-full text-white text-left text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize"><%= user.firstname %> <%= user.lastname %></h1>
+                    <p class="w-full text-gray-400 text-left text-sm">@<%= user.username %></p>
                   </div>  
-                  <p class="w-full text-gray-400 mt-2 text-left text-sm"><% if (currentUser.bio) { %><%= currentUser.bio %><% } else { %>No bio yet<% }  %></p>
+                  <p class="w-full text-gray-400 mt-2 text-left text-sm"><% if (user.bio) { %><%= user.bio %><% } else { %>No bio yet<% }  %></p>
               </div>
             </div>
+          <% } %>
         </div>
+         <!-- navbar start -->
+         <nav class="max-w-[640px] mx-auto w-full h-fit sticky bottom-0 bg-gray-900 flex justify-center items-center mt-auto py-4 border-t border-gray-700">
+          <div class="w-fit h-fit flex justify-center items-center gap-16">
+            <a href="/" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+              <i class="bi bi-house"></i>
+            </a>
+            <a href="/create-post" class="w-16 h-16 text-white text-xl font-bold bg-purple-700 rounded-full flex items-center justify-center shrink-0 hover:bg-purple-800 transition-all duration-300">
+              <i class="bi bi-plus-lg"></i>
+            </a>
+            <a href="/social-rooms" class="text-gray-400 text-xl font-bold p-4 hover:text-white transition-all duration-300">
+              <i class="bi bi-columns"></i>
+            </a>
+          </div>
+        </nav>
+        <!-- navbar end -->
     </div>
     <% } else { %>
     <!-- redirect to login page -->
@@ -50,6 +69,7 @@
       window.location.href = "/login";
     </script>
     <% } %>
+
   </body>
   <script>
     const usernameField = document.querySelector(".usernameField");

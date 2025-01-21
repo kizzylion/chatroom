@@ -1,11 +1,32 @@
 const { validationResult, body } = require("express-validator");
 const { hashPassword } = require("../helper/bcryptHash");
-const { userMethods, postMethods } = require("../db/db_utilities");
+const {
+  userMethods,
+  postMethods,
+  commentMethods,
+} = require("../db/db_utilities");
 const passport = require("passport");
+const {
+  groupsComments,
+  findAncestralParents,
+  findReplies,
+} = require("../public/js/groupComments");
 
 const getHomePage = async (req, res) => {
-  const posts = await postMethods.getPosts();
-  res.render("index/homepage", { posts });
+  const selectedTab = req.query.selectedTab;
+
+  console.log("selectedTab", selectedTab);
+  try {
+    let posts = await postMethods.getPosts();
+
+    res.render("index/homepage", { posts, selectedTab });
+  } catch (err) {
+    req.flash(
+      "error",
+      err.message || "Something went wrong. Please try again."
+    );
+    return res.redirect("/");
+  }
 };
 
 const getLoginPage = (req, res) => {
@@ -98,8 +119,11 @@ const postRegisterPage = async (req, res, next) => {
   }
 };
 
-const getProfilePage = (req, res) => {
-  res.render("index/profile");
+const getProfilePage = async (req, res) => {
+  const username = req.params.username;
+  const user = await userMethods.getUserByUsername(username);
+
+  res.render("index/profile", { user });
 };
 
 const getCreatePostPage = (req, res) => {
@@ -129,6 +153,104 @@ const postCreatePostPage = async (req, res) => {
   }
 };
 
+const getPostDetailPage = async (req, res) => {
+  const postId = req.params.id;
+  try {
+    const post = await postMethods.getPostById(postId);
+    const comments = await commentMethods.getCommentsByPostId(postId);
+
+    // group comments and their replies
+    const { tree, commentMap } = groupsComments(comments);
+
+    res.render("index/postDetail", { post, tree });
+  } catch (err) {
+    req.flash("error", err.message || "Post not found. Please try again.");
+    return res.redirect("/");
+  }
+};
+
+const postComment = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    req.flash("error", errors.array()[0].msg);
+    console.log(errors.array()[0].msg);
+    return res.redirect(`/post/${req.body.postId}`);
+  }
+  let { postId, parentCommentId, content } = req.body;
+  const userId = req.user.id;
+
+  if (parentCommentId === "null") {
+    parentCommentId = null;
+  }
+  console.log("postId", postId);
+  console.log("parentCommentId", parentCommentId);
+  console.log("content", content);
+  try {
+    await commentMethods.insertComment(
+      postId,
+      userId,
+      parentCommentId,
+      content
+    );
+    console.log("Comment created successfully");
+    res.redirect(`/post/${postId}`);
+  } catch (err) {
+    req.flash("error", "Comment creation failed. Please try again.");
+    return res.redirect(`/post/${postId}`);
+  }
+};
+
+const getReplyPage = async (req, res) => {
+  const commentId = req.params.commentId;
+  const postId = req.params.postId;
+
+  try {
+    const post = await postMethods.getPostById(postId);
+    const comments = await commentMethods.getCommentsByPostId(postId);
+    const comment = comments.find(
+      (comment) => comment.comment_id === commentId
+    );
+    const { tree, commentMap } = groupsComments(comments);
+    const ancestorComments = findAncestralParents(commentMap, commentId);
+    const replies = findReplies(commentMap, commentId);
+    console.log("ancestorComments", ancestorComments);
+    console.log("comment", comment);
+    console.log("replies", replies);
+    res.render("index/reply", {
+      post,
+      ancestorComments,
+      comment,
+      replies,
+      tree,
+    });
+  } catch (err) {
+    req.flash("error", err.message || "Comment not found. Please try again.");
+    return res.redirect(`/post/${postId}`);
+  }
+};
+
+const postReply = async (req, res) => {
+  const commentId = req.params.commentId;
+  const postId = req.params.postId;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    req.flash("error", errors.array()[0].msg);
+    return res.redirect(`/post/${postId}/reply/${commentId}`);
+  }
+  const userId = req.user.id;
+  const { content } = req.body;
+  try {
+    await commentMethods.insertComment(postId, userId, commentId, content);
+    req.flash("success", "Reply created successfully.");
+    res.redirect(`/post/${postId}/reply/${commentId}`);
+  } catch (err) {
+    req.flash("error", "Comment creation failed. Please try again.");
+    return res.redirect(`/post/${postId}/reply/${commentId}`);
+  }
+};
+
 module.exports = {
   getHomePage,
   getLoginPage,
@@ -139,4 +261,8 @@ module.exports = {
   getProfilePage,
   getCreatePostPage,
   postCreatePostPage,
+  getPostDetailPage,
+  postComment,
+  getReplyPage,
+  postReply,
 };
