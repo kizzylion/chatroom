@@ -34,6 +34,30 @@ const initializeDb = async () => {
     `);
     console.log("Users table created successfully");
 
+    // create types of groups table
+    await pool.query(`
+        CREATE TABLE RoomTypes (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            name VARCHAR(100) NOT NULL UNIQUE,
+            description TEXT,
+            is_admin_created BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        )
+    `);
+    console.log("RoomTypes table created successfully");
+
+    // seed room types
+    await pool.query(`
+        INSERT INTO RoomTypes (name, description, is_admin_created)
+        VALUES ('Official Room', 'Official platform announcements and support.', TRUE);
+
+        INSERT INTO RoomTypes (name, description)
+        VALUES ('Public Room', 'Open rooms for shared interests.');
+
+        INSERT INTO RoomTypes (name, description)
+        VALUES ('Private Room', 'Rooms with restricted membership for private discussions.');
+    `);
+
     // create rooms table
     await pool.query(`
             CREATE TABLE Rooms (
@@ -41,12 +65,13 @@ const initializeDb = async () => {
                 name VARCHAR(100) NOT NULL UNIQUE,
                 description TEXT,
                 room_picture BYTEA,
-                privacy VARCHAR(10) NOT NULL DEFAULT 'public',
+                room_type_id UUID NOT NULL REFERENCES RoomTypes(id),
                 created_by UUID NOT NULL REFERENCES Users(id),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             )
     `);
+
     console.log("Rooms table created successfully");
 
     // create room members table
@@ -56,8 +81,8 @@ const initializeDb = async () => {
             room_id UUID NOT NULL REFERENCES Rooms(id) ON DELETE CASCADE,
             user_id UUID NOT NULL REFERENCES Users(id) ON DELETE CASCADE,
             role VARCHAR(50) NOT NULL DEFAULT 'member',
-            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(room_id, user_id)
         )
     `);

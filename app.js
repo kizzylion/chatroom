@@ -54,9 +54,11 @@ app.use((req, res, next) => {
 });
 
 const indexRouter = require("./routes/indexRouter");
+const socialRoomsRouter = require("./routes/socialRoomsRouter");
 
 // use routes
 app.use("/", indexRouter);
+app.use("/social-rooms", socialRoomsRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

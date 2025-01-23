@@ -160,4 +160,47 @@ const commentMethods = {
   },
 };
 
-module.exports = { userMethods, postMethods, commentMethods };
+const roomMethods = {
+  getRooms: async () => {
+    try {
+      const query = `SELECT rooms.*, RoomTypes.name as room_type_name FROM rooms JOIN RoomTypes ON rooms.room_type_id = RoomTypes.id`;
+      const result = await pool.query(query);
+      return result.rows;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  getRoomTypes: async () => {
+    const query = `SELECT * FROM RoomTypes`;
+    const result = await pool.query(query);
+    return result.rows;
+  },
+  insertRoom: async (
+    roomName,
+    roomType,
+    roomPicture,
+    roomDescription,
+    userId
+  ) => {
+    try {
+      const query = `INSERT INTO rooms (name, room_type_id, room_picture, description, created_by) VALUES ($1, $2, $3, $4, $5)`;
+      const values = [roomName, roomType, roomPicture, roomDescription, userId];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  getRoomByName: async (roomName) => {
+    const query = `SELECT * FROM rooms WHERE name = $1`;
+    const values = [roomName];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  },
+  insertRoomMember: async (roomId, userId, role) => {
+    const query = `INSERT INTO RoomMembers (room_id, user_id, role) VALUES ($1, $2, $3)`;
+    const values = [roomId, userId, role];
+    await pool.query(query, values);
+  },
+};
+
+module.exports = { userMethods, postMethods, commentMethods, roomMethods };

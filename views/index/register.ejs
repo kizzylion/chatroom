@@ -14,9 +14,9 @@
             <input type="file" id="profilePicture" name="profilePicture" class="hidden" />
         </label>
         <!-- username -->
-        <% if (flash && flash.length > 0) { %>
+        <% if (flash && flash.error && flash.error.length > 0) { %>
           <div class="w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
-            <p class="text-white"><%= flash[0] %></p>
+            <p class="text-white"><%= flash.error %></p>
           </div>
         <% } %>
         <div class="usernameField w-full h-12 mb-5 flex items-center gap-2 rounded-md bg-gray-800 text-white px-4 py-2 border-2 border-gray-700 focus-within:border-purple-600">

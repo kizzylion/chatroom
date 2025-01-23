@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "Create Room" }) %>
+  <body class="bg-gray-900">
+    <%- include("../partials/appHeader", { title: "Create Room" }) %>
+    <div class="container-none max-w-screen-lg mx-auto w-full h-fit flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10 overflow-y-auto">
+      <form action="/social-rooms/create" method="post" enctype="multipart/form-data" class="max-w-md w-full h-fit flex flex-col items-center justify-center">
+        
+        <!-- profile picture -->
+        <label for="roomPicture" class="roomPictureField w-32 h-32 mb-10 flex items-center justify-center rounded-full text-white">
+            <div class="roomPicture w-32 h-32 rounded-full flex items-center justify-center overflow-hidden">
+                <img src="/images/avatar.png" alt="profile picture" class="w-32 h-32 object-cover" />
+            </div>
+            <input type="file" id="roomPicture" name="roomPicture" class="hidden" />
+        </label>
+        <!-- room name -->
+        <% if (error) { %>
+          <div class="w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+            <p class="text-white"><%= error %></p>
+          </div>
+        <% } %>
+        <% if (message) { %>
+          <div class="w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+            <p class="text-white"><%= message %></p>
+          </div>
+        <% } %>
+        <div class="roomNameField w-full h-12 mb-5 flex items-center gap-2 rounded-md bg-gray-800 text-white px-4 py-2 border-2 border-gray-700 focus-within:border-purple-600">
+
+          <i class="bi bi-person text-gray-500"></i>
+          <input type="text" placeholder="Room Name" name="roomName" minlength="3" maxlength="50" required class="w-full h-full bg-transparent ring-0 outline-none border-none focus:ring-0 focus:outline-none px-0" />
+        </div>
+        <div class="roomTypeField w-full h-12 mb-5 flex items-center gap-2 rounded-md bg-gray-800 text-white pl-4 py-2 border-2 border-gray-700 focus-within:border-purple-600">
+          <i class="bi bi-columns-gap text-gray-500"></i>
+          <select name="roomType" id="roomType" class="  w-full h-full bg-transparent ring-0 outline-none border-none focus:ring-0 focus:outline-none p-0">
+            <option value="">-Select Room Type-</option>
+            <% roomTypes.forEach(roomType => { %>
+              <option value="<%= roomType.id %>"><%= roomType.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <textarea name="roomDescription" id="roomDescription" rows="3" placeholder="Room Description" class="w-full mb-5 flex items-center gap-2 rounded-md bg-gray-800 text-white px-4 py-2 border-2 border-gray-700 focus:border-purple-600 ring-0 outline-none focus:ring-0 focus:outline-none"></textarea>
+        
+        <button type="submit" class="w-full h-12 rounded-md bg-purple-700 text-white px-4 py-2 hover:bg-purple-800 transition-all duration-300 ease-in-out cursor-pointer">Create Room</button>
+      </form>
+    </div>
+  </body>
+
+
+  <script>
+    const roomPictureField = document.querySelector(".roomPictureField");
+    const roomPicture = roomPictureField.querySelector("img");
+    const roomPictureInput = roomPictureField.querySelector("input");
+    const roomNameField = document.querySelector(".roomNameField");
+    const roomNameInput = roomNameField.querySelector("input");
+    const roomTypeField = document.querySelector(".roomTypeField");
+    const roomTypeInput = roomTypeField.querySelector("select");
+    
+    let isFormSubmitted = false; 
+    // room name regex only letters, numbers, space and special characters
+    const roomNameRegex = /^[a-zA-Z0-9_ ]+$/;
+
+    function handleBeforeUnload(event){
+        if(isFormSubmitted) return;
+
+      event.preventDefault();
+ 
+
+        //   check if user have not submit the form
+        if(form.checkValidity()){
+            // check if have submit the form
+            if(roomNameInput.value !== "" || roomTypeInput.value !== ""){
+                event.returnValue = "Are you sure you want to leave this page? All your data will be lost.";
+            }
+        }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    roomNameInput.addEventListener("input", () => {
+        if(roomNameInput.value.length < 3){
+            roomNameField.classList.add("error");
+            roomNameInput.setCustomValidity("Room name must be at least 3 characters long.");
+            return;
+        }else if(!roomNameRegex.test(roomNameInput.value)){
+            roomNameField.classList.add("error");
+            roomNameInput.setCustomValidity("Room name must be at least 3 characters long and contain only letters, numbers, and underscores.");
+            return;
+        }else{
+            roomNameField.classList.remove("error");
+            roomNameInput.setCustomValidity("");
+        }
+    })
+
+    roomTypeInput.addEventListener("input", () => {
+        if(roomTypeInput.value === ""){
+            roomTypeField.classList.add("error");
+            roomTypeInput.setCustomValidity("Room type is required.");
+            return;
+        }else{
+            roomTypeField.classList.remove("error");
+            roomTypeInput.setCustomValidity("");
+        }
+    })
+
+    
+
+    roomPictureInput.addEventListener("change", () => {
+      const file = roomPictureInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          roomPicture.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }else{
+        roomPicture.src = "/images/avatar.png"
+      }
+    });
+    
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        isFormSubmitted = true;
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        form.submit();
+    });
+
+
+    
+  </script>
+</html>
+

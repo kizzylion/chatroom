@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "Social Rooms" }) %>
+  <body class="bg-gray-900">
+    <div class="container-none w-full h-full flex flex-col items-center max-w-screen-lg mx-auto">
+      
+        <% if (!currentUser) { %>
+        <script>
+          window.location.href = "/";
+        </script>
+
+
+        <% } else { %>
+          <!-- header start -->
+
+          <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+            <a href="/" class="text-white text-xl font-bold">
+              Social Rooms
+            </a>
+            <a href="/profile/<%= currentUser.username %>" class="profilePicture w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
+              <% if (currentUser.profile_picture) { %>
+                <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover" />
+              <% } else { %>
+                <div class="w-10 h-10 bg-purple-700 rounded-full flex items-center justify-center">
+                  <p class="text-white text-sm font-bold">
+                    <%= currentUser.firstname.charAt(0).toUpperCase() %>
+                    <%= currentUser.lastname.charAt(0).toUpperCase() %>
+                  </p>
+                </div>
+              <% } %>
+            </a>
+          </header>
+
+          <!-- header end -->
+
+          <!-- main start -->
+          <div class="max-w-[640px] mx-auto content w-full h-full flex flex-col justify-center items-center">
+              <!-- alert start -->
+              <% if (flash.success) { %>
+              <div class="alert w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+                <p class="text-white"><%= flash.success %></p>
+              </div>
+              <% } %>
+              <% if (flash.error) { %>
+                  <div class="alert w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+                    <p class="text-white"><%= flash.error %></p>
+                  </div>
+              <% } %>
+
+              <!-- alert end  -->
+
+              <div class="search-create-room w-full h-fit flex justify-start items-center  pt-2 mb-2 gap-2 justify-between px-2">
+                  <form id="search-form" method="post" action="/social-rooms/search" class="w-full h-fit px-2 py-1 flex justify-start items-center gap-0 border border-gray-700 rounded-md focus-within:border-purple-500">
+                    <!-- search icon -->
+                    <i class="bi bi-search text-gray-400 text-sm mr-2"></i>
+                    <input type="search" name="search" id="search" class="w-full h-fit p-0 bg-gray-800 text-white text-sm font-medium rounded-full border border-gray-700 focus:outline-none focus:ring-none focus:ring-transparent focus:border-transparent" placeholder="Search for a room">
+                  </form>
+                  <a href="/social-rooms/create" class="bg-purple-700 w-fit h-fit text-center text-nowrap flex-nowrap whitespace-nowrap text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Create Room</a>
+              </div>
+
+          
+              <div id="myrooms-container" class="feeds-myrooms-tabs-content relative w-full h-full flex flex-col overflow-y-auto pb-[50vh]">
+                <div class="w-full h-fit flex flex-col justify-start items-start">
+                  <h1 class="text-white text-2xl font-bold mb-3 mt-4">Official Rooms</h1>
+                    <% officialRooms.forEach((room) => { %>
+                      <div class=" w-full h-fit flex flex-col relative mb-4">
+                        <a href="/social-rooms/<%= room.name %>" class="content  w-full h-fit flex flex-row justify-start items-start gap-3 p-2">
+                          <% if (room.room_picture) { %>
+                            <img src="data:image/png;base64,<%= room.room_picture %>" alt="room picture" class="w-16 h-16 object-cover rounded-md" />
+                          <% } else { %>
+                            <img src="/images/default-room-picture.png" alt="room picture" class="w-16 h-16 object-cover rounded-md" />
+                          <% } %>
+                          <div class="w-full h-full flex flex-col justify-start items-start">
+                            <p class="text-white font-semibold w-full text-lg truncate text-left text-ellipsis leading-none mb-1" ><%= room.name %></p>
+                            <p class="text-gray-400 text-sm font-medium w-full text-sm text-left line-clamp-2 leading-none mb-5"><%= room.description %></p>
+                            <div class="avatar-group w-fit h-fit flex justify-start items-center gap-0 mt-auto">
+                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 "></div>
+                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 ml-[-8.5%]"></div>
+                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 ml-[-8.5%]"></div>
+                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 ml-[-8.5%]"></div>
+                              <div class="avatar w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-50 ml-[-8.5%] text-center text-xs font-medium"><p class="text-purple-700 text-xs align-middle leading-5 h-full">+3</p></div>
+                            </div>
+                          </div>
+                        </a>
+                          <a href="/social-rooms/<%= room.name %>/join" class="bg-purple-700 absolute bottom-2 right-2 flex w-fit h-fit text-center text-nowrap flex-nowrap whitespace-nowrap text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Join</a>
+                        
+                      </div>
+                      
+                  <% }) %>
+                </div>
+              
+              </div>
+          </div>
+          <!-- main end -->
+
+        <!-- navbar start -->
+        <%- include("../partials/navigation") %>
+        <!-- navbar end -->
+        <% } %>
+    </div>
+
+    <script>
+      // remove alert after 3 seconds
+      setTimeout(() => {  
+        document.querySelector(".alert").remove();
+      }, 3000);
+    </script>
+    
+  </body>
+</html>
+
