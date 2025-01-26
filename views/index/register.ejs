@@ -152,9 +152,11 @@
             emailInput.setCustomValidity("");
         }
     })
+    // password regex any 4 characters long
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&_])[A-Za-z\d$@$!%*?&_#]{4,15}$/;
+    const confirmPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&_])[A-Za-z\d$@$!%*?&_#]{4,15}$/;
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&_])[A-Za-z\d$@$!%*?&_#]{8,15}$/;
-    const confirmPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&_])[A-Za-z\d$@$!%*?&_#]{8,15}$/;
+
     
     profilePictureInput.addEventListener("change", () => {
       const file = profilePictureInput.files[0];

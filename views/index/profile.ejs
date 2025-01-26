@@ -21,8 +21,19 @@
       </header>
     <% if (currentUser) { %>
     <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
+      <% if (flash && flash.error && flash.error.length > 0) { %>
+        <div class="w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+          <p class="text-white"><%= flash.error %></p>
+        </div>
+      <% } %>
+      <% if (flash && flash.success && flash.success.length > 0) { %>
+        <div class="w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+          <p class="text-white"><%= flash.success %></p>
+        </div>
+      <% } %>
         <div class="data-container max-w-[640px] w-full h-full flex flex-col items-center"> 
           <% if (user) { %>
+
             <div class="user-data w-full gap-5 h-fit flex items-center">
                 <div class="avatar-editBtn relative w-fit h-fit flex flex-col items-center justify-center ">
                   <div class="avatar w-28 h-28 shrink-0 rounded-full items-center justify-center overflow-hidden border-4 border-gray-200">
@@ -38,7 +49,7 @@
                         <% } %>
                   </div>
                   <% if (currentUser.username === user.username) { %>
-                  <a href="/profile/edit" class="editBtn w-fit h-fit absolute -bottom-4 flex items-center justify-center text-white text-sm font-medium bg-purple-700 hover:bg-purple-800 transition-all duration-300 rounded-full px-4 py-1 cursor-pointer border border-purple-700">
+                  <a href="/profile/<%= user.username %>/edit" class="editBtn w-fit h-fit absolute -bottom-4 flex items-center justify-center text-white text-sm font-medium bg-purple-700 hover:bg-purple-800 transition-all duration-300 rounded-full px-4 py-1 cursor-pointer border border-purple-700">
                     Edit Profile
                   </a>
                   <% } %>

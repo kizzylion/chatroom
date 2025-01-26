@@ -70,6 +70,31 @@ const userMethods = {
       console.error(error);
     }
   },
+  updateUser: async (
+    userId,
+    firstName,
+    lastName,
+    email,
+    bio,
+    profile_picture
+  ) => {
+    try {
+      const query = `UPDATE users SET firstName = $2, lastName = $3, email = $4, bio = $5, profile_picture = $6 WHERE id = $1`;
+      const values = [userId, firstName, lastName, email, bio, profile_picture];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  updateUserPassword: async (userId, password_hash) => {
+    try {
+      const query = `UPDATE users SET password_hash = $2 WHERE id = $1`;
+      const values = [userId, password_hash];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
 };
 
 const postMethods = {
@@ -85,14 +110,85 @@ const postMethods = {
   },
   getPosts: async (userId) => {
     try {
-      // get all posts and the number of comments they have with user details and room name
+      // Query to fetch posts with their related data
+      const query = `
+        SELECT 
+          posts.*, 
+          users.username, 
+          users.firstname, 
+          users.lastname, 
+          users.profile_picture, 
+          rooms.name AS room_name, 
+          COUNT(DISTINCT comments.id) AS comment_count, 
+          COUNT(DISTINCT Reactions.id) AS reaction_count,
+          ReactionTypes.name AS reaction_type_name,
+          ReactionTypes.icon AS reaction_type_icon,
+          UserReactions.name AS user_reaction_type_name,
+          UserReactions.icon AS user_reaction_type_icon
+        FROM posts
+        INNER JOIN users ON posts.user_id = users.id
+        LEFT JOIN rooms ON posts.room_id = rooms.id
+        LEFT JOIN comments ON posts.id = comments.post_id
+        LEFT JOIN Reactions ON posts.id = Reactions.post_id
+        LEFT JOIN ReactionTypes ON Reactions.reaction_type_id = ReactionTypes.id
+        LEFT JOIN (
+          SELECT 
+            Reactions.post_id, 
+            ReactionTypes.name, 
+            ReactionTypes.icon
+          FROM Reactions
+          JOIN ReactionTypes ON Reactions.reaction_type_id = ReactionTypes.id
+          WHERE Reactions.user_id = $1
+        ) AS UserReactions ON posts.id = UserReactions.post_id
+        GROUP BY 
+          posts.id, 
+          users.username, 
+          users.firstname, 
+          users.lastname, 
+          users.profile_picture, 
+          rooms.name, 
+          ReactionTypes.name, 
+          ReactionTypes.icon, 
+          UserReactions.name, 
+          UserReactions.icon
+        ORDER BY posts.created_at DESC
+      `;
+
+      const values = [userId];
+      const result = await pool.query(query, values);
+
+      // Process each post to add time ago and a comment tree
+      await Promise.all(
+        result.rows.map(async (post) => {
+          // Add 'time_ago' property
+          post.time_ago = timeAgo(post.created_at);
+
+          // Fetch comments and group them into a tree structure
+          const comments = await commentMethods.getCommentsByPostId(
+            post.id,
+            userId
+          );
+          const { tree } = groupsComments(comments);
+          post.comment_count = Object.keys(tree).length; // Update comment count with the grouped tree size
+        })
+      );
+
+      console.log(result.rows); // Log result for debugging
+      return result.rows;
+    } catch (error) {
+      console.error("Error fetching posts:", error.message);
+      throw new Error("Unable to fetch posts.");
+    }
+  },
+  getPostById: async (id, userId) => {
+    try {
       const query = `
         SELECT 
           posts.*, 
           users.username, users.firstname, users.lastname, users.profile_picture, 
           rooms.name as room_name, 
-          COUNT(comments.id) as comment_count, 
-          COUNT(Reactions.id) as reaction_count,
+          COUNT(DISTINCT comments.id) as comment_count, 
+          COUNT(DISTINCT Reactions.id) as reaction_count,
           ReactionTypes.name as reaction_type_name,
           ReactionTypes.icon as reaction_type_icon,
           UserReactions.name as user_reaction_type_name,
@@ -107,38 +203,12 @@ const postMethods = {
           SELECT Reactions.post_id, ReactionTypes.name, ReactionTypes.icon
           FROM Reactions
           JOIN ReactionTypes ON Reactions.reaction_type_id = ReactionTypes.id
-          WHERE Reactions.user_id = $1
+          WHERE Reactions.user_id = $2
         ) AS UserReactions ON posts.id = UserReactions.post_id
-
-        GROUP BY users.username, posts.id, rooms.name, users.firstname, users.lastname, users.profile_picture, ReactionTypes.name, ReactionTypes.icon, UserReactions.name, UserReactions.icon
-        ORDER BY posts.created_at DESC
-      `;
-      const values = [userId];
-      const result = await pool.query(query, values);
-      await Promise.all(
-        result.rows.map(async (post) => {
-          post.time_ago = timeAgo(post.created_at);
-          const comments = await commentMethods.getCommentsByPostId(post.id);
-          const { tree } = groupsComments(comments);
-          post.comment_count = Object.keys(tree).length;
-        })
-      );
-      console.log(result.rows);
-
-      return result.rows;
-    } catch (error) {
-      console.error(error);
-    }
-  },
-  getPostById: async (id) => {
-    try {
-      const query = `
-        SELECT posts.*, users.username, users.firstname, users.lastname, users.profile_picture, rooms.name as room_name FROM posts 
-        INNER JOIN users ON posts.user_id = users.id
-        LEFT JOIN rooms ON posts.room_id = rooms.id
         WHERE posts.id = $1
+        GROUP BY posts.id, users.username, users.firstname, users.lastname, users.profile_picture, rooms.name, ReactionTypes.name, ReactionTypes.icon, UserReactions.name, UserReactions.icon
       `;
-      const values = [id];
+      const values = [id, userId];
       const result = await pool.query(query, values);
       result.rows[0].time_ago = timeAgo(result.rows[0].created_at);
       return result.rows[0];
@@ -188,15 +258,38 @@ const commentMethods = {
       console.error(error);
     }
   },
-  getCommentsByPostId: async (postId) => {
+  getCommentsByPostId: async (postId, userId) => {
     try {
       const query = `
-        SELECT comments.id as comment_id, comments.parent_comment_id as parent_comment_id, comments.user_id as user_id, comments.content as content, comments.created_at as created_at, users.username as username, users.firstname as firstname, users.lastname as lastname, users.profile_picture as  profile_picture FROM comments 
+        SELECT comments.id as comment_id, 
+        comments.parent_comment_id as parent_comment_id, 
+        comments.user_id as user_id, 
+        comments.content as content, 
+        comments.created_at as created_at, 
+        users.username as username, 
+        users.firstname as firstname, 
+        users.lastname as lastname, 
+        users.profile_picture as  profile_picture,
+        ReactionTypes.name as reaction_type_name,
+        ReactionTypes.icon as reaction_type_icon,
+        COUNT(CommentReactions.id) as reaction_count,
+        UserReactions.name as user_reaction_type_name,
+        UserReactions.icon as user_reaction_type_icon
+        FROM comments 
         INNER JOIN users ON comments.user_id = users.id 
+        LEFT JOIN CommentReactions ON comments.id = CommentReactions.comment_id
+        LEFT JOIN ReactionTypes ON CommentReactions.reaction_type_id = ReactionTypes.id
+        LEFT JOIN (
+          SELECT CommentReactions.comment_id, ReactionTypes.name, ReactionTypes.icon
+          FROM CommentReactions
+          JOIN ReactionTypes ON CommentReactions.reaction_type_id = ReactionTypes.id
+          WHERE CommentReactions.user_id = $2
+        ) AS UserReactions ON comments.id = UserReactions.comment_id
         WHERE comments.post_id = $1 
+        GROUP BY comments.id, users.username, users.firstname, users.lastname, users.profile_picture, ReactionTypes.name, ReactionTypes.icon, UserReactions.name, UserReactions.icon
         ORDER BY comments.created_at ASC
       `;
-      const values = [postId];
+      const values = [postId, userId];
       const result = await pool.query(query, values);
       result.rows.forEach((comment) => {
         comment.time_ago = timeAgo(comment.created_at);
@@ -230,6 +323,24 @@ const commentMethods = {
     `;
       const result = await pool.query(query);
       return result.rows;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  insertCommentReaction: async (commentId, userId, reaction_type_id) => {
+    try {
+      const query = `INSERT INTO CommentReactions (comment_id, user_id, reaction_type_id) VALUES ($1, $2, $3)`;
+      const values = [commentId, userId, reaction_type_id];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  deleteCommentReaction: async (commentId, userId) => {
+    try {
+      const query = `DELETE FROM CommentReactions WHERE comment_id = $1 AND user_id = $2`;
+      const values = [commentId, userId];
+      await pool.query(query, values);
     } catch (error) {
       console.error(error);
     }

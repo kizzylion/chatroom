@@ -141,6 +141,73 @@ const getProfilePage = async (req, res) => {
   res.render("index/profile", { user });
 };
 
+const getEditProfilePage = async (req, res) => {
+  const username = req.params.username;
+  const user = await userMethods.getUserByUsername(username);
+  res.render("index/editProfile", { user });
+};
+
+const postEditProfilePage = async (req, res) => {
+  if (!res.locals.currentUser) {
+    return res.redirect("/login");
+  }
+  const username = res.locals.currentUser.username;
+  const { firstName, lastName, email, bio } = req.body;
+  const userId = res.locals.currentUser.id;
+  let base64ProfilePicture = null;
+  if (req.file) {
+    base64ProfilePicture = req.file.buffer.toString("base64");
+  }
+
+  try {
+    await userMethods.updateUser(
+      userId,
+      firstName,
+      lastName,
+      email,
+      bio,
+      base64ProfilePicture
+    );
+    req.flash("success", "Profile updated successfully.");
+    res.redirect(`/profile/${username}`);
+  } catch (err) {
+    req.flash("error", "Profile update failed. Please try again.");
+    return res.redirect(`/profile/${username}/edit`);
+  }
+};
+
+const getChangePasswordPage = (req, res) => {
+  const user = res.locals.currentUser;
+  res.render("index/changePassword", { user });
+};
+
+const postChangePasswordPage = async (req, res) => {
+  const username = res.locals.currentUser.username;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    req.flash("error", errors.array()[0].msg);
+    return res.redirect(`/profile/${username}/edit/changepassword`);
+  }
+  const { newPassword, confirmNewPassword } = req.body;
+  const userId = res.locals.currentUser.id;
+
+  const hashedPassword = await hashPassword(newPassword);
+
+  if (newPassword !== confirmNewPassword) {
+    req.flash("error", "New password and confirm new password do not match");
+    return res.redirect(`/profile/${username}/edit/changepassword`);
+  }
+
+  try {
+    await userMethods.updateUserPassword(userId, hashedPassword);
+    req.flash("success", "Password updated successfully.");
+    res.redirect(`/profile/${username}`);
+  } catch (err) {
+    req.flash("error", "Password update failed. Please try again.");
+    return res.redirect(`/profile/${username}/edit/changepassword`);
+  }
+};
+
 const getCreatePostPage = (req, res) => {
   res.render("index/createPost");
 };
@@ -173,9 +240,6 @@ const postReaction = async (req, res) => {
   const reaction = req.query.reaction;
   const userId = res.locals.currentUser.id;
 
-  console.log("postId", postId);
-  console.log("reaction", reaction);
-  console.log("userId", userId);
   try {
     if (reaction === "add") {
       const reactionType = await postMethods.getReactionTypeByName("Love");
@@ -189,12 +253,34 @@ const postReaction = async (req, res) => {
     return res.redirect(`/?focusPostId=${postId}`);
   }
 };
+const postDetailReaction = async (req, res) => {
+  const postId = req.params.id;
+  const reaction = req.query.reaction;
+  const userId = res.locals.currentUser.id;
+
+  try {
+    if (reaction === "add") {
+      const reactionType = await postMethods.getReactionTypeByName("Love");
+      await postMethods.insertReaction(postId, userId, reactionType.id);
+    } else {
+      await postMethods.deleteReaction(postId, userId);
+    }
+    res.redirect(`/post/${postId}`);
+  } catch (err) {
+    req.flash("error", "Reaction failed. Please try again.");
+    return res.redirect(`/post/${postId}`);
+  }
+};
 
 const getPostDetailPage = async (req, res) => {
+  if (!res.locals.currentUser) {
+    return res.redirect("/login");
+  }
   const postId = req.params.id;
+  const userId = res.locals.currentUser.id;
   try {
-    const post = await postMethods.getPostById(postId);
-    const comments = await commentMethods.getCommentsByPostId(postId);
+    const post = await postMethods.getPostById(postId, userId);
+    const comments = await commentMethods.getCommentsByPostId(postId, userId);
 
     // group comments and their replies
     const { tree, commentMap } = groupsComments(comments);
@@ -219,9 +305,7 @@ const postComment = async (req, res) => {
   if (parentCommentId === "null") {
     parentCommentId = null;
   }
-  console.log("postId", postId);
-  console.log("parentCommentId", parentCommentId);
-  console.log("content", content);
+
   try {
     await commentMethods.insertComment(
       postId,
@@ -237,25 +321,50 @@ const postComment = async (req, res) => {
   }
 };
 
+const postCommentReaction = async (req, res) => {
+  const postId = req.params.id;
+  const commentId = req.params.commentId;
+  const reaction = req.query.reaction;
+  const userId = res.locals.currentUser.id;
+  try {
+    if (reaction === "add") {
+      const reactionType = await postMethods.getReactionTypeByName("Love");
+      await commentMethods.insertCommentReaction(
+        commentId,
+        userId,
+        reactionType.id
+      );
+    } else {
+      await commentMethods.deleteCommentReaction(commentId, userId);
+    }
+    res.redirect(`/post/${postId}`);
+  } catch (err) {
+    req.flash("error", "Reaction failed. Please try again.");
+    return res.redirect(`/post/${postId}`);
+  }
+};
+
 const getReplyPage = async (req, res) => {
   if (!res.locals.currentUser) {
     return res.redirect("/login");
   }
   const commentId = req.params.commentId;
   const postId = req.params.postId;
-
+  const userId = res.locals.currentUser.id;
   try {
-    const post = await postMethods.getPostById(postId);
-    const comments = await commentMethods.getCommentsByPostId(postId);
+    const post = await postMethods.getPostById(postId, userId);
+    const comments = await commentMethods.getCommentsByPostId(postId, userId);
     const comment = comments.find(
       (comment) => comment.comment_id === commentId
     );
     const { tree, commentMap } = groupsComments(comments);
     const ancestorComments = findAncestralParents(commentMap, commentId);
     const replies = findReplies(commentMap, commentId);
-    console.log("ancestorComments", ancestorComments);
-    console.log("comment", comment);
-    console.log("replies", replies);
+    // console.log("ancestorComments", ancestorComments);
+    // console.log("comment", comment);
+    // console.log("replies", replies);
+
+    console.table(replies);
     res.render("index/reply", {
       post,
       ancestorComments,
@@ -294,6 +403,29 @@ const postReply = async (req, res) => {
   }
 };
 
+const postReplyReaction = async (req, res) => {
+  const postId = req.params.postId;
+  const commentId = req.params.commentId;
+  const reaction = req.query.reaction;
+  const userId = res.locals.currentUser.id;
+  try {
+    if (reaction === "add") {
+      const reactionType = await postMethods.getReactionTypeByName("Love");
+      await commentMethods.insertCommentReaction(
+        commentId,
+        userId,
+        reactionType.id
+      );
+    } else {
+      await commentMethods.deleteCommentReaction(commentId, userId);
+    }
+    res.redirect(`/post/${postId}/reply/${commentId}`);
+  } catch (err) {
+    req.flash("error", "Reaction failed. Please try again.");
+    return res.redirect(`/post/${postId}/reply/${commentId}`);
+  }
+};
+
 const getUsersPage = async (req, res) => {
   if (!res.locals.currentUser) {
     return res.redirect("/login");
@@ -314,6 +446,7 @@ module.exports = {
   postLoginPage,
   postLogoutPage,
   getProfilePage,
+  getEditProfilePage,
   getCreatePostPage,
   postCreatePostPage,
   getPostDetailPage,
@@ -322,4 +455,10 @@ module.exports = {
   postReply,
   getUsersPage,
   postReaction,
+  postDetailReaction,
+  postCommentReaction,
+  postReplyReaction,
+  postEditProfilePage,
+  getChangePasswordPage,
+  postChangePasswordPage,
 };

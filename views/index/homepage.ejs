@@ -36,7 +36,9 @@
             </a>
             
             <div class="emptyDiv flex justify-center items-center gap-4 w-fit h-fit">
-              <a href="/users" class="text-white text-sm font-medium">All Users</a>
+              <% if (currentUser.role === "superadmin") { %>
+                <a href="/users" class="text-white text-sm font-medium">All Users</a>
+              <% } %>
               <a href="/profile/<%= currentUser.username %>" class="profilePicture w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
                 <% if (currentUser.profile_picture) { %>
                   <img src="data:image/png;base64,<%= currentUser.profile_picture %>" alt="profile picture" class="w-10 h-10 object-cover" />
@@ -109,7 +111,7 @@
               </div>
               <div class="post-actions w-full h-fit flex justify-between items-center gap-12 p-4">
                 <% if (post.user_reaction_type_name) { %>
-                  <a href="/post/<%= post.id %>/reaction?reaction=remove" class="text-gray-400 text-xl font-medium">
+                  <a href="/post/<%= post.id %>/reaction?reaction=remove"  class="text-gray-400 text-xl font-medium">
                     <i class="bi bi-heart-fill text-red-500 mr-1"></i> <span class="text-gray-400 text-sm font-medium"> <%= post.reaction_count %> </span>
                   </a>
                 <% } else { %>
@@ -123,9 +125,9 @@
                   </span>
                 </a>
                 <!-- reply -->
-                <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
+                <button data-post-id="<%= post.id %>" class="share-post-button text-gray-400 text-xl font-medium">
                   <i class="bi bi-share"></i>
-                </a>
+                </button>
                 <!-- delete -->
                  <div>
                    <% if (currentUser.username === post.username) { %>
@@ -245,12 +247,40 @@
           // Smoothly scroll the container so the post is visible
           container.scrollTo({
             top: postTop - containerScrollTop,
-            behavior: "smooth",
+            behavior: "instant",
           });
         }
       }
     </script>
+    <!-- share post -->
+    <script>
+      document.querySelectorAll(".share-post-button").forEach((button, index) => {
+        button.addEventListener("click", async () => {
+          const postId = button.getAttribute("data-post-id");
+          const postUrl = `/post/${postId}`;
     
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: "ChatRoom",
+                text: "ChatRoom",
+                url: postUrl,
+              });
+            } catch (error) {
+              console.error("Error sharing post:", error);
+            }
+          } else {
+            // Fallback: Copy the URL to the clipboard
+            try {
+              await navigator.clipboard.writeText(postUrl);
+              alert("Link copied to clipboard! You can now share it.");
+            } catch (error) {
+              console.error("Error copying to clipboard:", error);
+            }
+          }
+        });
+      });
+    </script>
   </body>
 </html>
 

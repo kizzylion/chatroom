@@ -43,10 +43,17 @@
 
                 </div>
                 <div class="post-actions w-full h-fit flex justify-between items-center gap-12 p-4">
-                  
-                  <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
-                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
-                  </a>
+                  <% if (post.user_reaction_type_name) { %>
+                    <a href="/post/<%= post.id %>/detail/reaction?reaction=remove" class="text-gray-400 text-xl font-medium">
+                      <i class="bi bi-heart-fill text-red-500 mr-1"></i> <span class="text-gray-400 text-sm font-medium"> <%= post.reaction_count %> </span>
+                    </a>
+                  <% } else { %>
+                    <a href="/post/<%= post.id %>/detail/reaction?reaction=add" class="text-gray-400 text-xl font-medium">
+                      <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">
+                        <%= post.reaction_count %>
+                      </span>
+                    </a>
+                  <% } %>
                   <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
                     <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">
                         <%= Object.keys(tree).length %>
@@ -93,9 +100,17 @@
                                             </div>
                                             <p class="w-full h-fit text-gray-50 text-base font-regular"><%= comment.content %></p>
                                             <div class="comment-actions w-full h-fit flex justify-start items-center gap-2 pb-2">
-                                                <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
-                                                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
+                                              <% if (comment.user_reaction_type_name) { %>
+                                                <a href="/post/<%= post.id %>/comment/<%= comment.comment_id %>/reaction?reaction=remove" class="text-gray-400 text-xl font-medium">
+                                                    <i class="bi bi-heart-fill text-red-500 mr-1"></i> <span class="text-gray-400 text-sm font-medium"> <%= comment.reaction_count %> </span>
                                                 </a>
+                                              <% } else { %>
+                                                <a href="/post/<%= post.id %>/comment/<%= comment.comment_id %>/reaction?reaction=add" class="text-gray-400 text-xl font-medium">
+                                                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">
+                                                        <%= comment.reaction_count %>
+                                                    </span>
+                                                </a>
+                                              <% } %>
                                                 <a href="/post/<%= post.id %>/reply/<%= comment.comment_id %>" class="text-gray-400 text-xl font-medium">
                                                     <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">
                                                         <%= Object.keys(comment.replies).length %>
