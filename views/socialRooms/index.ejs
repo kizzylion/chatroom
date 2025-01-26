@@ -61,10 +61,10 @@
           
               <div id="myrooms-container" class="feeds-myrooms-tabs-content relative w-full h-full flex flex-col overflow-y-auto pb-[50vh]">
                 <div class="w-full h-fit flex flex-col justify-start items-start">
-                  <h1 class="text-white text-2xl font-bold mb-3 mt-4">Official Rooms</h1>
+                  <h1 class="text-white text-2xl font-bold mb-3 mt-4 px-2"> <i class="bi bi-award text-yellow-500"></i> Official Rooms</h1>
                     <% officialRooms.forEach((room) => { %>
                       <div class=" w-full h-fit flex flex-col relative mb-4">
-                        <a href="/social-rooms/<%= room.name %>" class="content  w-full h-fit flex flex-row justify-start items-start gap-3 p-2">
+                        <a href="/social-rooms/<%= room.id %>" class="content  w-full h-fit flex flex-row justify-start items-start gap-3 p-2">
                           <% if (room.room_picture) { %>
                             <img src="data:image/png;base64,<%= room.room_picture %>" alt="room picture" class="w-16 h-16 object-cover rounded-md" />
                           <% } else { %>
@@ -74,18 +74,76 @@
                             <p class="text-white font-semibold w-full text-lg truncate text-left text-ellipsis leading-none mb-1" ><%= room.name %></p>
                             <p class="text-gray-400 text-sm font-medium w-full text-sm text-left line-clamp-2 leading-none mb-5"><%= room.description %></p>
                             <div class="avatar-group w-fit h-fit flex justify-start items-center gap-0 mt-auto">
-                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 "></div>
-                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 ml-[-8.5%]"></div>
-                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 ml-[-8.5%]"></div>
-                              <div class="avatar w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-50 ml-[-8.5%]"></div>
-                              <div class="avatar w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-50 ml-[-8.5%] text-center text-xs font-medium"><p class="text-purple-700 text-xs align-middle leading-5 h-full">+3</p></div>
+                              <% room.members.forEach((member, index) => { %>
+                                <% if (index < 4) { %>
+                                  <div class="avatar w-8 h-8 rounded-full bg-gray-400 border-2 border-gray-50 flex items-center justify-center overflow-hidden first:ml-0 ml-[-8.5%]">
+                                    <% if (member.profile_picture) { %>
+                                      <img src="data:image/png;base64,<%= member.profile_picture %>" alt="member picture" class="w-6 h-6 object-cover" />
+                                    <% } else { %>
+                                      <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                                        <p class="text-gray-900 text-xs font-semibold"><%= member.firstname.charAt(0).toUpperCase() %><%= member.lastname.charAt(0).toUpperCase() %></p>
+                                      </div>
+                                    <% } %>
+                                  </div>
+                                <% } %>
+                              <% }) %>
+                              <% if (room.members.length > 4) { %>
+                                <div class="avatar w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-50 ml-[-8.5%] text-center text-xs font-medium"><p class="text-purple-700 text-xs align-middle leading-5 h-full">+<%= room.members.length - 4 %></p></div>
+                              <% } %>
                             </div>
                           </div>
                         </a>
-                          <a href="/social-rooms/<%= room.name %>/join" class="bg-purple-700 absolute bottom-2 right-2 flex w-fit h-fit text-center text-nowrap flex-nowrap whitespace-nowrap text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Join</a>
+                        <% if (room.members.some(member => member.user_id === currentUser.id)) { %>
+                          <a href="/social-rooms/<%= room.id %>?action=leave" method="post" class="bg-purple-700 absolute bottom-2 right-2 flex w-fit h-fit text-center text-nowrap flex-nowrap whitespace-nowrap text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Leave</a>
+                        <% } else { %>
+                          <a href="/social-rooms/<%= room.id %>?action=join" method="post" class="bg-purple-700 absolute bottom-2 right-2 flex w-fit h-fit text-center text-nowrap flex-nowrap whitespace-nowrap text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Join</a>
+                        <% } %>
                         
                       </div>
                       
+                  <% }) %>
+                </div>
+
+                <div class="w-full h-fit flex flex-col justify-start items-start">
+                  <h1 class="text-white text-2xl font-bold mb-3 mt-4 px-2"> <i class="bi bi-globe text-green-500"></i> Public Rooms</h1>
+                  <% publicRooms.forEach((room) => { %>
+                    <div class=" w-full h-fit flex flex-col relative mb-4">
+                      <a href="/social-rooms/<%= room.id %>" class="content  w-full h-fit flex flex-row justify-start items-start gap-3 p-2">
+                        <% if (room.room_picture) { %>
+                          <img src="data:image/png;base64,<%= room.room_picture %>" alt="room picture" class="w-16 h-16 object-cover rounded-md" />
+                        <% } else { %>
+                          <img src="/images/default-room-picture.png" alt="room picture" class="w-16 h-16 object-cover rounded-md" />
+                        <% } %>
+                        <div class="w-full h-full flex flex-col justify-start items-start">
+                          <p class="text-white font-semibold w-full text-lg truncate text-left text-ellipsis leading-none mb-1" ><%= room.name %></p>
+                          <p class="text-gray-400 text-sm font-medium w-full text-sm text-left line-clamp-2 leading-none mb-5"><%= room.description %></p>
+                          <div class="avatar-group w-fit h-fit flex justify-start items-center gap-0 mt-auto">
+                            <% room.members.forEach((member, index) => { %>
+                              <% if (index < 4) { %>
+                                <div class="avatar w-8 h-8 rounded-full bg-gray-400 border-2 border-gray-50 flex items-center justify-center overflow-hidden first:ml-0 ml-[-8.5%]">
+                                  <% if (member.profile_picture) { %>
+                                    <img src="data:image/png;base64,<%= member.profile_picture %>" alt="member picture" class="w-6 h-6 object-cover" />
+                                  <% } else { %>
+                                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                                      <p class="text-gray-900 text-xs font-semibold"><%= member.firstname.charAt(0).toUpperCase() %><%= member.lastname.charAt(0).toUpperCase() %></p>
+                                    </div>
+                                  <% } %>
+                                </div>
+                              <% } %>
+                            <% }) %>
+                            <% if (room.members.length > 4) { %>
+                              <div class="avatar w-6 h-6 rounded-full bg-gray-200 border-2 border-gray-50 ml-[-8.5%] text-center text-xs font-medium"><p class="text-purple-700 text-xs align-middle leading-5 h-full">+<%= room.members.length - 4 %></p></div>
+                            <% } %>
+                          </div>
+                        </div>
+                      </a>
+                      <% if (room.members.some(member => member.user_id === currentUser.id)) { %>
+                        <a href="/social-rooms/<%= room.id %>?action=leave" method="post" class="bg-purple-700 absolute bottom-2 right-2 flex w-fit h-fit text-center text-nowrap flex-nowrap whitespace-nowrap text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Leave</a>
+                      <% } else { %>
+                        <a href="/social-rooms/<%= room.id %>?action=join" method="post" class="bg-purple-700 absolute bottom-2 right-2 flex w-fit h-fit text-center text-nowrap flex-nowrap whitespace-nowrap text-white text-sm font-medium px-4 py-1 rounded-full border border-purple-700 hover:bg-purple-800 transition-all duration-300">Join</a>
+                      <% } %>
+                      
+                    </div>
                   <% }) %>
                 </div>
               

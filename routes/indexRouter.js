@@ -80,4 +80,7 @@ indexRouter.get("/post/:postId/reply/:commentId", indexController.getReplyPage);
 
 indexRouter.post("/post/:postId/reply/:commentId", indexController.postReply);
 
+// view all users
+indexRouter.get("/users", indexController.getUsersPage);
+
 module.exports = indexRouter;

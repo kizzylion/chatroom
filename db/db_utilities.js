@@ -1,6 +1,8 @@
 const pool = require("./pool");
 const timeAgo = require("../public/js/timeAgo.js");
+const { format } = require("date-fns");
 const { groupsComments } = require("../public/js/groupComments");
+
 const userMethods = {
   insertUser: async (
     username,
@@ -42,6 +44,28 @@ const userMethods = {
       const values = [id];
       const result = await pool.query(query, values);
       return result.rows[0];
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  // get all users in the database with their total number of posts and rooms they are in.
+  getUsers: async () => {
+    try {
+      const query = `
+        SELECT 
+          users.*, 
+          COUNT(posts.id) AS post_count, 
+          COUNT(DISTINCT RoomMembers.room_id) AS room_count,
+          COUNT(DISTINCT rooms.id) AS room_created_count
+        FROM users
+        LEFT JOIN posts ON users.id = posts.user_id AND posts.room_id IS NULL
+        LEFT JOIN RoomMembers ON users.id = RoomMembers.user_id
+        LEFT JOIN rooms ON users.id = rooms.created_by
+        GROUP BY users.id
+        ORDER BY users.created_at ASC;
+      `;
+      const result = await pool.query(query);
+      return result.rows;
     } catch (error) {
       console.error(error);
     }
@@ -150,13 +174,17 @@ const commentMethods = {
     }
   },
   getComments: async () => {
-    const query = `
-      SELECT comments.*, users.username, users.firstname, users.lastname, users.profile_picture FROM comments 
-      INNER JOIN users ON comments.user_id = users.id 
-      ORDER BY comments.created_at ASC
+    try {
+      const query = `
+        SELECT comments.*, users.username, users.firstname, users.lastname, users.profile_picture FROM comments 
+        INNER JOIN users ON comments.user_id = users.id 
+        ORDER BY comments.created_at ASC
     `;
-    const result = await pool.query(query);
-    return result.rows;
+      const result = await pool.query(query);
+      return result.rows;
+    } catch (error) {
+      console.error(error);
+    }
   },
 };
 
@@ -175,6 +203,12 @@ const roomMethods = {
     const result = await pool.query(query);
     return result.rows;
   },
+  getRoomTypeById: async (id) => {
+    const query = `SELECT * FROM RoomTypes WHERE id = $1`;
+    const values = [id];
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  },
   insertRoom: async (
     roomName,
     roomType,
@@ -191,15 +225,91 @@ const roomMethods = {
     }
   },
   getRoomByName: async (roomName) => {
-    const query = `SELECT * FROM rooms WHERE name = $1`;
-    const values = [roomName];
-    const result = await pool.query(query, values);
-    return result.rows[0];
+    try {
+      const query = `SELECT * FROM rooms WHERE name = $1`;
+      const values = [roomName];
+      const result = await pool.query(query, values);
+      return result.rows[0];
+    } catch (error) {
+      console.error(error);
+    }
   },
   insertRoomMember: async (roomId, userId, role) => {
-    const query = `INSERT INTO RoomMembers (room_id, user_id, role) VALUES ($1, $2, $3)`;
-    const values = [roomId, userId, role];
-    await pool.query(query, values);
+    try {
+      const query = `INSERT INTO RoomMembers (room_id, user_id, role) VALUES ($1, $2, $3)`;
+      const values = [roomId, userId, role];
+      await pool.query(query, values);
+      return { message: "You have joined the room successfully." };
+    } catch (error) {
+      console.error(error);
+      return { message: "Something went wrong. Please try again." };
+    }
+  },
+  getAllRoomMembers: async () => {
+    try {
+      const query = `SELECT RoomMembers.*, users.username, users.firstname, users.lastname, users.profile_picture FROM RoomMembers JOIN users ON RoomMembers.user_id = users.id`;
+      const result = await pool.query(query);
+      return result.rows;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  getRoomMembers: async (roomId) => {
+    try {
+      const query = `SELECT RoomMembers.*, users.username, users.firstname, users.lastname, users.profile_picture FROM RoomMembers JOIN users ON RoomMembers.user_id = users.id WHERE room_id = $1`;
+      const values = [roomId];
+      const result = await pool.query(query, values);
+      return result.rows;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  deleteRoomMember: async (roomId, userId) => {
+    try {
+      const query = `DELETE FROM RoomMembers WHERE room_id = $1 AND user_id = $2`;
+      const values = [roomId, userId];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  getRoomById: async (id) => {
+    try {
+      const query = `SELECT * FROM rooms WHERE id = $1`;
+      const values = [id];
+      const result = await pool.query(query, values);
+      return result.rows[0];
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  insertPost: async (roomId, userId, content, postPicture) => {
+    try {
+      const query = `INSERT INTO posts (room_id, user_id, content, post_picture) VALUES ($1, $2, $3, $4)`;
+      const values = [roomId, userId, content, postPicture];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  getPostsByRoomId: async (roomId) => {
+    try {
+      const query = `SELECT posts.*, users.username, users.firstname, users.lastname, users.profile_picture FROM posts JOIN users ON posts.user_id = users.id WHERE posts.room_id = $1 ORDER BY posts.created_at ASC`;
+      const values = [roomId];
+      const result = await pool.query(query, values);
+      return result.rows;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  deleteMessage: async (id) => {
+    try {
+      const query = `DELETE FROM posts WHERE id = $1`;
+      const values = [id];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
   },
 };
 

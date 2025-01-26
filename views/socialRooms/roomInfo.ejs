@@ -1,0 +1,136 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <%- include("../partials/Head", { title: "Room-info | " + room.name }) %>
+    <body class="bg-gray-900">
+        <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+            <a href="/social-rooms/<%= room.id %>" class="backBtn w-6 h-6 p-[2px] flex flex-col justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="transparent" stroke="currentColor"  class="bi bi-chevron-left" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+            </svg>
+            </a>
+            <h1 class="text-white"> <%= room.name %> </h1>
+            <div class="emptyDiv w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer">
+
+                <% if (room.isMember) { %>
+                    <a href="/social-rooms/<%= room.id %>?action=leave" method="post" class="emptyDiv w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </a>
+                <% } %>
+            </div>
+        </header>
+        <% if (currentUser) { %>
+        <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
+            <div class="data-container max-w-[640px] relative w-full h-full flex flex-col items-center gap-10 overflow-y-auto pb-[20vh] scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900"> 
+                <!-- alert -->
+                <div class="alert-container max-w-[640px] w-full h-fit flex flex-col items-center absolute top-0 left-0">
+                    <% if (flash.error) { %>
+                        <div class="alert w-full h-12 mb-5 bg-red-500 flex items-center justify-center">
+                            <p class="text-white text-sm font-medium"><%= flash.error %></p>
+                        </div>
+                    <% } %>
+                    <% if (flash.success) { %>
+                        <div class="alert w-full h-12 mb-5 bg-green-500 flex items-center justify-center">
+                            <p class="text-white text-sm font-medium"><%= flash.success %></p>
+                        </div>
+                    <% } %>
+                </div>
+                <!-- alert end -->
+                <div class="room-data w-full gap-5 h-fit flex flex-col items-center">
+                    <div class="avatar-editBtn relative w-fit h-fit flex flex-col mb-5 items-center justify-center ">
+                    <div class="avatar w-28 h-28 shrink-0 rounded-full items-center justify-center overflow-hidden border-4 border-gray-200">
+                            <% if (room.room_picture) { %>
+                                <img src="data:image/png;base64,<%= room.room_picture %>" alt="Profile Picture" class="w-full h-full object-cover" />
+                            <% } else { %>
+                                <img src="/images/default-room-picture.png" alt="Profile Picture" class="w-full h-full object-cover" />
+                            <% } %>
+                    </div>
+                    <% if (room.isAdmin) { %>
+                    <a href="/social-rooms/<%= room.id %>/edit" class="editBtn w-fit h-fit absolute -bottom-4 flex items-center justify-center text-white text-sm font-medium bg-purple-700 hover:bg-purple-800 transition-all duration-300 rounded-full px-4 py-1 cursor-pointer border border-purple-700">
+                        Edit Room
+                    </a>
+                    <% } %>
+                    </div>
+                <div class="user-data max-w-[320px] w-full h-fit flex flex-col items-center">
+                    <div class="text-username w-full flex flex-col items-center">
+                        <h1 class="w-full text-white text-center text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize mb-2"><%= room.name %></h1>
+                        <!-- display room type with different icon color based on room type -->
+                        <% if (room.room_type_name === 'Public Room') { %>
+                            <h6 class="w-fit text-gray-400 text-center text-xs bg-green-500/20 text-green-500 rounded-full px-2 py-1"><i class="bi bi-globe"></i> <%= room.room_type_name %></h6>
+                        <% } else if (room.room_type_name === 'Private Room') { %>
+                            <h6 class="w-fit text-gray-400 text-center text-xs bg-blue-500/20 text-blue-500 rounded-full px-2 py-1"><i class="bi bi-lock"></i> <%= room.room_type_name %></h6>
+                        <% } else if (room.room_type_name === 'Official Room') { %>
+                            <h6 class="w-fit text-gray-400 text-center text-xs bg-yellow-500/20 text-yellow-500 rounded-full px-2 py-1"><i class="bi bi-award"></i> <%= room.room_type_name %></h6>
+                        <% } %>
+                    </div>  
+                    <p class="w-full text-gray-400 mt-2 text-center text-sm"><% if (room.description) { %><%= room.description %><% } else { %>No description yet<% }  %></p>
+                </div>
+                </div>
+                <div class="room-members w-full h-fit flex flex-col items-center">
+                    <h1 class="w-full text-white text-left text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize"> <%= room.members.length %> Members</h1>
+                    <!-- members list -->
+                    <% if(room.isMember) { %>
+                        <div class="members-list w-full h-fit flex flex-col items-center">
+                            <% room.members.forEach((member) => { %>
+                                <div 
+                                    class="member w-full h-fit flex items-center gap-4 py-2 border-b border-gray-700 last:border-b-0">
+                                    <a 
+                                        <% if (room.isMember || currentUser.role === 'admin') { %>
+                                            href="/profile/<%= member.username %>"
+                                        <% } %>
+                                        class="profilePicture w-8 h-8 shrink-0  rounded-full flex items-center justify-center overflow-hidden" >
+                                        <% if(member.profile_picture){ %>
+                                        <img src="data:image/png;base64,<%= member.profile_picture %>" alt="profile picture" class="w-8 h-8 object-cover " />
+                                        <% }else{ %>
+                                            <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                                            <p class="w-full h-fit text-white text-center text-base font-medium"><%= member.firstname.charAt(0) %><%= member.lastname.charAt(0) %></p>
+                                            </div>
+                                        <% } %>
+                                    </a>
+            
+                                    <a 
+                                        <% if (room.isMember || currentUser.role === 'admin') { %>
+                                            href="/profile/<%= member.username %>"
+                                        <% } %>
+                                        class="member-data w-full h-fit flex flex-col justify-start items-start">
+                                        <p class="w-full text-gray-400 text-left text-sm"><%= member.firstname %> <%= member.lastname %></p>
+                                        <p class="w-full text-gray-400 text-left text-sm"><%= member.username %></p>
+                                    </a>
+                                    
+                                    <% if (member.role === 'admin') { %>
+                                        <div class="member-role w-fit h-fit flex flex-col items-center">
+                                            <p class="w-full text-gray-400 text-left text-sm">Admin</p>
+                                        </div>
+                                    <% } %>
+                                    <!-- only room admin can remove member -->
+                                    <% if (room.isAdmin && member.role !== 'admin') { %>
+                                        <div class="remove-member w-fit h-fit flex flex-col items-center">
+                                            <a href="/social-rooms/<%= room.id %>/remove/<%= member.user_id %>" class="w-fit h-fit text-red-400 text-left text-sm hover:text-red-500 transition-all duration-300 cursor-pointer"> <i class="bi bi-x-circle"></i> </a>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+            <!-- navbar start -->
+            <%- include("../partials/navigation") %>
+            <!-- navbar end -->
+        </div>
+        <% } else { %>
+        <!-- redirect to login page -->
+        <script>
+        window.location.href = "/login";
+        </script>
+        <% } %>
+
+        <script>
+            // remove alert after 3 seconds
+            setTimeout(() => {  
+                document.querySelector(".alert").remove();
+            }, 3000);
+        </script>
+    </body>
+    
+    </html>
+

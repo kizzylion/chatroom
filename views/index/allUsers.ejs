@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "All Users" }) %>
+  <body class="bg-gray-900">
+    <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+        <a href="/" class="backBtn w-6 h-6 p-[2px] flex flex-col justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="transparent" stroke="currentColor"  class="bi bi-chevron-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+          </svg>
+        </a>
+        <h1 class="text-white"> All Users </h1>
+        <div class="emptyDiv w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer">
+          
+        </div>
+        
+      </header>
+    <% if (currentUser) { %>
+    <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
+        <div class="data-container max-w-[640px] w-full h-full flex flex-col items-center"> 
+            <h1 class="w-full text-white text-left text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize">All Users record</h1>
+            <!-- table start -->
+            <table class="w-full text-white text-left text-sm font-medium border-separate border-spacing-y-2 border-spacing-x-2 border-gray-700">
+              <thead class="border-b border-gray-700  ">
+                <tr class="text-white text-left text-sm font-medium py-2 align-middle">
+                  <th class="w-12 text-center">ID</th>
+                  <th class="w-12 text-center">Avatar</th>
+                  <th class="w-24 text-left">Username</th>
+                  <th class="w-24 text-left">Full Name</th>
+                  <th class="w-12 text-center">Post Count</th>
+                  <th class="w-12 text-center">Room Member</th>
+                  <th class="w-12 text-center">Room Created</th>
+                  <th class="w-12 text-center">Joined At</th>
+                  <th class="w-12 text-center">Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% users.forEach((user, index) => { %>
+                  <tr class="h-12 text-white text-left text-sm font-medium border-b border-gray-700 bg-gray-900 py-2 align-middle border-b-2 border-gray-700">
+                    <td class="w-12 text-center"><%= index + 1 %></td>
+                    <td><% if (user.profile_picture) { %> 
+                        <img src="data:image/png;base64,<%= user.profile_picture %>" alt="Profile Picture" class="w-8 h-8 rounded-full" />
+                         <% } else { %> 
+                            <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+                                <p class="text-white text-xs text-center font-semibold">
+                                    <%= user.firstname.charAt(0).toUpperCase() %>
+                                    <%= user.lastname.charAt(0).toUpperCase() %>
+                                </p>
+                            </div> 
+                        <% } %> 
+                    </td>
+                    <td class="text-left"><%= user.username %></td>
+                    <td class="text-left capitalize"><%= user.firstname %> <%= user.lastname %></td>
+                    <td class="text-center"><%= user.post_count %></td>
+                    <td class="text-center"><%= user.room_count %></td>
+                    <td class="text-center"><%= user.room_created_count %></td>
+                    <td class="text-center"><%= user.created_at.toLocaleDateString("en-US", { month: "short", year: "numeric" }) %></td>
+                    <td class="text-center <%= user.role === "superadmin" ? "after:content-['🎖️'] after:ml-1"  : "" %>"> <%= user.role %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+        </div>
+
+        </div>
+         <!-- navbar start -->
+         <%- include("../partials/navigation") %>
+        <!-- navbar end -->
+    </div>
+    <% } else { %>
+    <!-- redirect to login page -->
+    <script>
+      window.location.href = "/login";
+    </script>
+    <% } %>
+
+  </body>
+  <script>
+    const usernameField = document.querySelector(".usernameField");
+    const usernameInput = usernameField.querySelector("input");
+    const passwordField = document.querySelector(".passwordField");
+    const passwordInput = passwordField.querySelector("input");
+    const passwordEye = passwordField.querySelector("button");
+
+    usernameInput.addEventListener("input", () => {
+      if (usernameInput.value.length < 3) {
+        usernameField.classList.add("error");
+        usernameInput.setCustomValidity("Username must be at least 3 characters long.");
+        return;
+      } else {
+        usernameField.classList.remove("error");
+        usernameInput.setCustomValidity("");
+      }
+    });
+
+    passwordInput.addEventListener("input", () => {
+      if (passwordInput.value.length < 8) {
+        passwordField.classList.add("error");
+        passwordInput.setCustomValidity("Password must be at least 8 characters long.");
+        return;
+      } else {
+        passwordField.classList.remove("error");
+        passwordInput.setCustomValidity("");
+      }
+    });
+
+    passwordEye.addEventListener("click", () => {
+      passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if(form.checkValidity()){
+        form.submit();
+      }
+    });
+  </script>
+  
+</html>
+

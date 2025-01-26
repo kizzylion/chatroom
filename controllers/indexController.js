@@ -4,6 +4,7 @@ const {
   userMethods,
   postMethods,
   commentMethods,
+  roomMethods,
 } = require("../db/db_utilities");
 const passport = require("passport");
 const {
@@ -18,8 +19,22 @@ const getHomePage = async (req, res) => {
   console.log("selectedTab", selectedTab);
   try {
     let posts = await postMethods.getPosts();
+    let rooms = await roomMethods.getRooms();
+    let allRoomMembers = await roomMethods.getAllRoomMembers();
 
-    res.render("index/homepage", { posts, selectedTab });
+    rooms.forEach((room) => {
+      room.members = allRoomMembers.filter(
+        (member) => member.room_id === room.id
+      );
+    });
+
+    // filter rooms to only include rooms that the user is a member of
+    const user = res.locals.currentUser;
+    const userRooms = rooms.filter((room) =>
+      room.members.some((member) => member.user_id === user.id)
+    );
+
+    res.render("index/homepage", { posts, selectedTab, userRooms });
   } catch (err) {
     req.flash(
       "error",
@@ -201,6 +216,9 @@ const postComment = async (req, res) => {
 };
 
 const getReplyPage = async (req, res) => {
+  if (!res.locals.currentUser) {
+    return res.redirect("/login");
+  }
   const commentId = req.params.commentId;
   const postId = req.params.postId;
 
@@ -230,6 +248,9 @@ const getReplyPage = async (req, res) => {
 };
 
 const postReply = async (req, res) => {
+  if (!res.locals.currentUser) {
+    return res.redirect("/login");
+  }
   const commentId = req.params.commentId;
   const postId = req.params.postId;
 
@@ -251,6 +272,18 @@ const postReply = async (req, res) => {
   }
 };
 
+const getUsersPage = async (req, res) => {
+  if (!res.locals.currentUser) {
+    return res.redirect("/login");
+  }
+  if (res.locals.currentUser.role !== "superadmin") {
+    return res.redirect("/");
+  }
+
+  const users = await userMethods.getUsers();
+  res.render("index/allUsers", { users });
+};
+
 module.exports = {
   getHomePage,
   getLoginPage,
@@ -265,4 +298,5 @@ module.exports = {
   postComment,
   getReplyPage,
   postReply,
+  getUsersPage,
 };

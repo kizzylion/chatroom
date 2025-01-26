@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include("../partials/Head", { title: "Room | " + room.name }) %>
+  <body class="bg-gray-900">
+    <header class="max-w-screen-lg mx-auto w-full h-fit flex justify-between items-center px-2 py-3 border-b border-gray-700">
+        <a href="/social-rooms" class="backBtn w-6 h-6 p-[2px] flex flex-col justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="transparent" stroke="currentColor"  class="bi bi-chevron-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+          </svg>
+        </a>
+        <a href="/social-rooms/<%= room.id %>/info" class="room-picture-room-name w-fit h-fit flex justify-center items-center gap-3">
+            <% if (room.room_picture) { %>
+                <div class="room-picture-room w-6 h-6 rounded-full overflow-hidden">
+                    <img src="data:image/png;base64,<%= room.room_picture %>" alt="room picture" class="w-full h-auto object-cover">
+                </div>
+            <% } else { %>
+                <div class="room-picture-room w-6 h-6 rounded-full overflow-hidden bg-gray-700 flex justify-center items-center">
+                    <img src="/images/default-room-picture.png" alt="room picture" class="w-full h-auto object-cover">
+                </div>
+            <% } %>
+            <h1 class="text-white"> 
+                <%= room.name %> 
+                <% if (room.room_type_name === 'Official Room') { %>
+                    <i class="bi bi-award text-yellow-500"></i>
+                <% } else if (room.room_type_name === 'Public Room') { %>
+                    <i class="bi bi-globe text-green-500"></i>
+                <% } else if (room.room_type_name === 'Private Room') { %>
+                    <i class="bi bi-lock text-blue-500"></i>
+                <% } %>
+            </h1>
+            </a>
+        <div class="emptyDiv min-w-[60px] w-fit h-fit p-2 flex items-center justify-center text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer">
+            <!-- if current user is not a room member -->
+            <% if (!room.isMember) { %>
+                <a href="/social-rooms/<%= room.id %>?action=join" class="join-room-cta text-sm w-fit bg-purple-500 rounded-lg p-1  h-fit flex items-center px-2 justify-center text-white hover:text-white bg-green-500 hover:bg-green-600 transition-all duration-300 cursor-pointer">
+                    Join
+                </a>
+            <% } %>
+        </div>
+    </header>
+    <div class="container-none max-w-screen-lg relative relative mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 pt-10 pb-0 overflow-y-auto">
+        <!-- alert -->
+         <div class="alert-container max-w-[640px] w-full h-fit flex flex-col items-center absolute top-0 left-0">
+
+             <% if (flash.error) { %>
+                 <div class="alert-error max-w-[640px] w-full h-fit flex flex-col items-center">
+                     <p class="text-red-500 text-sm"><%= flash.error %></p>
+                 </div>
+             <% } %>
+             <% if (flash.success) { %>
+                 <div class="alert-success max-w-[640px] w-full h-fit flex flex-col items-center">
+                     <p class="text-green-500 text-sm"><%= flash.success %></p>
+                 </div>
+             <% } %>
+         </div>
+         <!-- alert end -->
+
+        <!-- chats container -->
+        <div class="chats-container max-w-[640px] w-full h-fit flex flex-col items-center"> 
+            <% room.posts.forEach((post) => { %>
+                <% if (post.user_id !== currentUser.id) { %>
+                    <!-- if user is not a room member, blur the post -->
+                    <div id="post-<%= post.id %>" class="room-chat w-full h-fit flex flex-row items-end gap-2">
+                        <a 
+                            <% if (room.isMember || room.isAdmin) { %>
+                                href="/profile/<%= post.username %>"
+                            <% } %>
+                            class="profilePicture w-6 h-6 shrink-0  rounded-full flex items-center justify-center overflow-hidden" >
+                            <% if(post.profile_picture){ %>
+                              <img src="data:image/png;base64,<%= post.profile_picture %>" alt="profile picture" class="w-6 h-6 object-cover " />
+                              <% }else{ %>
+                                <div class="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+                                  <p class="w-full h-fit text-white text-center text-base font-medium"><%= post.firstname.charAt(0) %><%= post.lastname.charAt(0) %></p>
+                                </div>
+                              <% } %>
+                          </a>
+                        <div class="content max-w-xs w-fit h-fit flex flex-col items-start gap-[6px]">
+                            <div class="name-delete-cta w-full h-fit flex flex-row justify-start items-center">
+                                <% if (room.isMember || room.isAdmin) { %>
+                                    <p class="text-amber-600 text-xs font-medium mr-auto"><%= post.firstname %> <%= post.lastname %></p>
+                                <% } else { %>
+                                    <p class="text-amber-600 text-xs font-medium mr-auto align-middle">Sender: *** ***</p>
+                                <% } %>
+                                <% if (room.isAdmin || post.user_id === currentUser.id) { %>
+                                    <a href="/social-rooms/<%= room.id %>/chat" class="delete-cta w-4 h-4 rounded-full overflow-hidden bg-transparent flex justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                                        <i class="bi bi-x"></i>
+                                    </a>
+                                <% } %>
+                            </div>
+                            <p class="text-gray-100 bg-gray-700 text-sm p-2 rounded-r-lg rounded-t-lg "><%= post.content %></p>
+                            <div class="chat-time w-full h-fit flex flex-row justify-end items-center">
+                                <% if (room.isMember || room.isAdmin) { %>
+                                    <p class="text-gray-400 text-xs">
+                                        <!-- if the post was created today -->
+                                        <% if (new Date(post.created_at).toLocaleDateString() === new Date().toLocaleDateString()) { %>
+                                            <%= new Date(post.created_at).toLocaleString("en-US", { 
+                                                hour: "2-digit", 
+                                                minute: "2-digit", 
+                                                hour12: true 
+                                            }) %>
+                                        <% } else { %>
+                                            <%= new Date(post.created_at).toLocaleString("en-US", { 
+                                                day: "2-digit", 
+                                                month: "2-digit", 
+                                                year: "numeric" 
+                                            }) %>
+                                        <% } %>
+                                    </p>
+                                <% } else { %>
+                                    <p class="text-gray-400 text-xs align-bottom">
+                                        Time: ** **
+                                    </p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <!-- if user is a room member and focus the last message in the chat -->
+
+                    <div id="post-<%= post.id %>" class="room-chat w-full h-fit flex flex-row justify-end items-end gap-2">
+                        
+                        <div class="content max-w-xs w-fit h-fit flex flex-col items-start gap-[6px]">
+                            <div class="name-delete-cta w-full h-fit flex flex-row justify-end items-center">
+                                <a href="/social-rooms/<%= room.id %>/message/<%= post.id %>/delete" class="delete-cta w-4 h-4 rounded-full overflow-hidden bg-transparent flex justify-center items-center hover:bg-gray-700 transition-all duration-300 cursor-pointer">
+                                    <i class="bi bi-x"></i>
+                                </a>
+                            </div>
+                            <p class="text-purple-100 bg-purple-800 text-sm p-2 rounded-l-lg rounded-t-lg "><%= post.content %></p>
+                            <div class="chat-time w-full h-fit flex flex-row justify-end items-center">
+                                <p  class="text-gray-400 text-xs">
+                                    <!-- if the post was created today -->
+                                    <% if (new Date(post.created_at).toLocaleDateString() === new Date().toLocaleDateString()) { %>
+                                        <%= new Date(post.created_at).toLocaleString("en-US", { 
+                                            hour: "2-digit", 
+                                            minute: "2-digit", 
+                                            hour12: true 
+                                        }) %>
+                                    <% } else { %>
+                                        <%= new Date(post.created_at).toLocaleString("en-US", { 
+                                            day: "2-digit", 
+                                            month: "2-digit", 
+                                            year: "numeric" 
+                                        }) %>
+                                    <% } %>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            <% }) %>
+            
+        </div>
+        <% if (room.isMember || room.isAdmin) { %>
+            <form action="/social-rooms/<%= room.id %>" method="post" class="chat-input max-w-[640px] sticky bottom-0 w-full h-fit mt-auto bg-gray-900 flex flex-row items-center gap-3 px-3 py-2">
+                <input type="hidden" name="roomId" value="<%= room.id %>">
+                <input type="hidden" name="userId" value="<%= currentUser.id %>">
+                <input type="text" name="message"  class="w-full h-fit bg-gray-700 text-gray-100 p-2 rounded-lg ring-1 ring-gray-600 focus:ring-2 focus:ring-purple-600 focus:outline-none transition-all duration-300" placeholder="Type a message...">
+                <button type="submit" class="send-btn w-10 h-10 rounded-lg overflow-hidden bg-transparent flex justify-center items-center hover:bg-purple-700 transition-all duration-300 cursor-pointer">
+                    <i class="bi bi-send text-gray-100"></i>
+                </button>
+            </form>
+        <% } else { %>
+            <p class="text-amber-500 text-sm mt-auto text-center p-2 bg-amber-900/50 rounded-lg mb-2">You are not a member of this room. Please join the room to chat.</p>
+        <% } %>
+    </div>
+    <!-- navbar -->
+    <%- include("../partials/navigation") %>
+    
+    <script>
+        setTimeout(() => {
+            const alertContainer = document.querySelector(".alert-container");
+            alertContainer.style.display = "none";
+        }, 5000);
+    </script>
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // if there are chats-container, jump to the last post in the chat and don't scroll to it
+            const chatsContainer = document.querySelector(".chats-container").children;
+            if (chatsContainer.length > 0) {
+                const lastPost = chatsContainer[chatsContainer.length - 1];
+                lastPost.scrollIntoView({ behavior: "instant" });
+            }
+        });
+    </script>
+    
+  </body>
+</html>
+
