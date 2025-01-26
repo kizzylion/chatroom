@@ -117,6 +117,9 @@ const handleRoomAction = async (action, roomId, userId, req, res, next) => {
 };
 
 const handleMessageDelete = async (req, res, next) => {
+  if (!res.locals.currentUser) {
+    return res.redirect("/login");
+  }
   const roomId = req.params.roomId;
   const messageId = req.params.messageId;
   try {

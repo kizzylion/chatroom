@@ -15,32 +15,34 @@ const {
 
 const getHomePage = async (req, res) => {
   const selectedTab = req.query.selectedTab;
+  if (res.locals.currentUser) {
+    try {
+      let posts = await postMethods.getPosts(res.locals.currentUser.id);
+      let rooms = await roomMethods.getRooms();
+      let allRoomMembers = await roomMethods.getAllRoomMembers();
 
-  console.log("selectedTab", selectedTab);
-  try {
-    let posts = await postMethods.getPosts(res.locals.currentUser.id);
-    let rooms = await roomMethods.getRooms();
-    let allRoomMembers = await roomMethods.getAllRoomMembers();
+      rooms.forEach((room) => {
+        room.members = allRoomMembers.filter(
+          (member) => member.room_id === room.id
+        );
+      });
 
-    rooms.forEach((room) => {
-      room.members = allRoomMembers.filter(
-        (member) => member.room_id === room.id
+      // filter rooms to only include rooms that the user is a member of
+      const user = res.locals.currentUser;
+      const userRooms = rooms.filter((room) =>
+        room.members.some((member) => member.user_id === user.id)
       );
-    });
 
-    // filter rooms to only include rooms that the user is a member of
-    const user = res.locals.currentUser;
-    const userRooms = rooms.filter((room) =>
-      room.members.some((member) => member.user_id === user.id)
-    );
-
-    res.render("index/homepage", { posts, selectedTab, userRooms });
-  } catch (err) {
-    req.flash(
-      "error",
-      err.message || "Something went wrong. Please try again."
-    );
-    return res.redirect("/");
+      res.render("index/homepage", { posts, selectedTab, userRooms });
+    } catch (err) {
+      req.flash(
+        "error",
+        err.message || "Something went wrong. Please try again."
+      );
+      return res.redirect("/");
+    }
+  } else {
+    res.render("index/homepage", { selectedTab });
   }
 };
 
@@ -360,9 +362,6 @@ const getReplyPage = async (req, res) => {
     const { tree, commentMap } = groupsComments(comments);
     const ancestorComments = findAncestralParents(commentMap, commentId);
     const replies = findReplies(commentMap, commentId);
-    // console.log("ancestorComments", ancestorComments);
-    // console.log("comment", comment);
-    // console.log("replies", replies);
 
     console.table(replies);
     res.render("index/reply", {
