@@ -17,7 +17,8 @@
     <% if (currentUser) { %>
     <div class="container-none max-w-screen-lg mx-auto w-full h-full flex flex-col items-center max-w-screen-lg mx-auto px-4 py-10">
         <div class="data-container max-w-[640px] w-full h-full flex flex-col items-center"> 
-            <h1 class="w-full text-white text-left text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize">All Users record</h1>
+            <h1 class="w-full text-white text-left text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap capitalize">All Users record : <span class="text-purple-500 font-bold"><%= users.length %></span></h1>
+            
             <!-- table start -->
             <table class="w-full text-white text-left text-sm font-medium border-separate border-spacing-y-2 border-spacing-x-2 border-gray-700 overflow-x-auto">
               <thead class="border-b border-gray-700  ">
