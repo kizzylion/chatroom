@@ -66,6 +66,7 @@ indexRouter.get("/profile/:username", indexController.getProfilePage);
 
 indexRouter.get("/create-post", indexController.getCreatePostPage);
 
+indexRouter.get("/post/:id/reaction", indexController.postReaction);
 indexRouter.get("/post/:id", indexController.getPostDetailPage);
 indexRouter.post(
   "/create-post",

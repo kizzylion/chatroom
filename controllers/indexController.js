@@ -18,7 +18,7 @@ const getHomePage = async (req, res) => {
 
   console.log("selectedTab", selectedTab);
   try {
-    let posts = await postMethods.getPosts();
+    let posts = await postMethods.getPosts(res.locals.currentUser.id);
     let rooms = await roomMethods.getRooms();
     let allRoomMembers = await roomMethods.getAllRoomMembers();
 
@@ -168,6 +168,28 @@ const postCreatePostPage = async (req, res) => {
   }
 };
 
+const postReaction = async (req, res) => {
+  const postId = req.params.id;
+  const reaction = req.query.reaction;
+  const userId = res.locals.currentUser.id;
+
+  console.log("postId", postId);
+  console.log("reaction", reaction);
+  console.log("userId", userId);
+  try {
+    if (reaction === "add") {
+      const reactionType = await postMethods.getReactionTypeByName("Love");
+      await postMethods.insertReaction(postId, userId, reactionType.id);
+    } else {
+      await postMethods.deleteReaction(postId, userId);
+    }
+    res.redirect(`/?focusPostId=${postId}`);
+  } catch (err) {
+    req.flash("error", "Reaction failed. Please try again.");
+    return res.redirect(`/?focusPostId=${postId}`);
+  }
+};
+
 const getPostDetailPage = async (req, res) => {
   const postId = req.params.id;
   try {
@@ -299,4 +321,5 @@ module.exports = {
   getReplyPage,
   postReply,
   getUsersPage,
+  postReaction,
 };

@@ -83,18 +83,38 @@ const postMethods = {
       console.error(error);
     }
   },
-  getPosts: async () => {
+  getPosts: async (userId) => {
     try {
       // get all posts and the number of comments they have with user details and room name
       const query = `
-        SELECT posts.*, users.username, users.firstname, users.lastname, users.profile_picture, rooms.name as room_name, COUNT(comments.id) as comment_count FROM posts 
+        SELECT 
+          posts.*, 
+          users.username, users.firstname, users.lastname, users.profile_picture, 
+          rooms.name as room_name, 
+          COUNT(comments.id) as comment_count, 
+          COUNT(Reactions.id) as reaction_count,
+          ReactionTypes.name as reaction_type_name,
+          ReactionTypes.icon as reaction_type_icon,
+          UserReactions.name as user_reaction_type_name,
+          UserReactions.icon as user_reaction_type_icon
+        FROM posts 
         INNER JOIN users ON posts.user_id = users.id
         LEFT JOIN rooms ON posts.room_id = rooms.id
         LEFT JOIN comments ON posts.id = comments.post_id
-        GROUP BY users.username, posts.id, rooms.name, users.firstname, users.lastname, users.profile_picture 
+        LEFT JOIN Reactions ON posts.id = Reactions.post_id
+        LEFT JOIN ReactionTypes ON Reactions.reaction_type_id = ReactionTypes.id
+        LEFT JOIN (
+          SELECT Reactions.post_id, ReactionTypes.name, ReactionTypes.icon
+          FROM Reactions
+          JOIN ReactionTypes ON Reactions.reaction_type_id = ReactionTypes.id
+          WHERE Reactions.user_id = $1
+        ) AS UserReactions ON posts.id = UserReactions.post_id
+
+        GROUP BY users.username, posts.id, rooms.name, users.firstname, users.lastname, users.profile_picture, ReactionTypes.name, ReactionTypes.icon, UserReactions.name, UserReactions.icon
         ORDER BY posts.created_at DESC
-        `;
-      const result = await pool.query(query);
+      `;
+      const values = [userId];
+      const result = await pool.query(query, values);
       await Promise.all(
         result.rows.map(async (post) => {
           post.time_ago = timeAgo(post.created_at);
@@ -121,6 +141,34 @@ const postMethods = {
       const values = [id];
       const result = await pool.query(query, values);
       result.rows[0].time_ago = timeAgo(result.rows[0].created_at);
+      return result.rows[0];
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  insertReaction: async (postId, userId, reaction_type_id) => {
+    try {
+      const query = `INSERT INTO Reactions (post_id, user_id, reaction_type_id) VALUES ($1, $2, $3)`;
+      const values = [postId, userId, reaction_type_id];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  deleteReaction: async (postId, userId) => {
+    try {
+      const query = `DELETE FROM Reactions WHERE post_id = $1 AND user_id = $2`;
+      const values = [postId, userId];
+      await pool.query(query, values);
+    } catch (error) {
+      console.error(error);
+    }
+  },
+  getReactionTypeByName: async (name) => {
+    try {
+      const query = `SELECT * FROM ReactionTypes WHERE name = $1`;
+      const values = [name];
+      const result = await pool.query(query, values);
       return result.rows[0];
     } catch (error) {
       console.error(error);

@@ -112,6 +112,12 @@ const initializeDb = async () => {
     `);
     console.log("ReactionTypes table created successfully");
 
+    // seed reaction types
+    await pool.query(`
+        INSERT INTO ReactionTypes (name, icon)
+        VALUES ('Like', '👍'), ('Love', '❤️'), ('Haha', '😂'), ('Wow', '😮'), ('Sad', '😢'), ('Angry', '😠');
+    `);
+
     // create reactions table
     await pool.query(`
         CREATE TABLE Reactions (

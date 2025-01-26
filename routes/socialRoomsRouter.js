@@ -18,6 +18,13 @@ const validatePostMessage = [
   body("postPicture").optional(),
 ];
 
+socialRoomsRouter.use((req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.redirect("/login");
+  }
+  next();
+});
+
 socialRoomsRouter.get("/", socialRoomsController.getSocialRoomsPage);
 socialRoomsRouter.get("/create", socialRoomsController.getCreateSocialRoomPage);
 socialRoomsRouter.post(

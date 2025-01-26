@@ -108,10 +108,15 @@
                 <% } %>
               </div>
               <div class="post-actions w-full h-fit flex justify-between items-center gap-12 p-4">
-                
-                <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
-                  <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium">3</span>
-                </a>
+                <% if (post.user_reaction_type_name) { %>
+                  <a href="/post/<%= post.id %>/reaction?reaction=remove" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-heart-fill text-red-500 mr-1"></i> <span class="text-gray-400 text-sm font-medium"> <%= post.reaction_count %> </span>
+                  </a>
+                <% } else { %>
+                  <a href="/post/<%= post.id %>/reaction?reaction=add" class="text-gray-400 text-xl font-medium">
+                    <i class="bi bi-heart mr-1"></i> <span class="text-gray-400 text-sm font-medium"> <%= post.reaction_count %>  </span>
+                  </a>
+                <% } %>
                 <a href="/post/<%= post.id %>" class="text-gray-400 text-xl font-medium">
                   <i class="bi bi-chat-dots mr-1"></i> <span class="text-gray-400 text-sm font-medium">
                       <%= post.comment_count %>
@@ -222,6 +227,28 @@
           document.querySelector(".refresh-posts").classList.add("hidden");
         }
       }); 
+    </script>
+    <!-- focus post -->
+    <script>
+      // Get the post ID from the URL query string
+      const focusPostId = new URLSearchParams(window.location.search).get("focusPostId");
+    
+      if (focusPostId) {
+        const post = document.querySelector(`#post-${focusPostId}`);
+        const container = document.querySelector(".feeds-myrooms-tabs-content");
+    
+        if (post && container) {
+          // Get the top position of the post relative to the container
+          const postTop = post.offsetTop;
+          const containerScrollTop = container.scrollTop;
+    
+          // Smoothly scroll the container so the post is visible
+          container.scrollTo({
+            top: postTop - containerScrollTop,
+            behavior: "smooth",
+          });
+        }
+      }
     </script>
     
   </body>
